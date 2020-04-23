@@ -78,7 +78,17 @@ namespace Stairs
 			int cell = Grid.PosToCell(this);
 			MyGrid.Masks[cell] &= ~MyGrid.Flags.HasScaffolding;
 			Pathfinding.Instance.AddDirtyNavGridCell(cell);
+			if (Patches.ChainedDeconstruction)
+			{
+				Deconstructable deconstructable = base.GetComponent<Deconstructable>();
+				if (deconstructable != null && deconstructable.IsMarkedForDeconstruction())
+				{
+					MyGrid.ForceDeconstruction(Grid.CellLeft(cell), false);
+					MyGrid.ForceDeconstruction(Grid.CellRight(cell), false);
+				}
+			}
 		}
+
 
 		[Serialize]
 		private bool buildingEnabled = true;

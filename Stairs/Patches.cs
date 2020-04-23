@@ -1,4 +1,5 @@
 ﻿using Harmony;
+using KMod;
 using STRINGS;
 using System;
 using System.Collections.Generic;
@@ -8,6 +9,23 @@ namespace Stairs
 {
 	public class MyGrid
 	{
+		public static void ForceDeconstruction(int cell, bool isStairs = true)
+		{
+			if (!Grid.IsValidCell(cell)) return;
+			if (isStairs) { if (!MyGrid.IsStair(cell)) return; }
+			else if (!MyGrid.IsScaffolding(cell)) return;
+
+			int layer = (int)ObjectLayer.Building;
+			if (!isStairs) layer = (int)ObjectLayer.AttachableBuilding;
+			GameObject gameObject = Grid.Objects[cell, layer];
+			if (gameObject == null) return;
+
+			//if (!isStairs && gameObject.GetComponent<Scaffolding>() == null) return;
+			Deconstructable deconstructable = gameObject.GetComponent<Deconstructable>();
+			if (deconstructable == null) return;
+			if (!deconstructable.IsMarkedForDeconstruction()) return;
+			deconstructable.CompleteWork(null);
+		}
 		public static bool IsStair(int cell)
 		{
 			if ((Masks[cell] & Flags.HasStair) == 0) return false;
@@ -88,9 +106,10 @@ namespace Stairs
 	public class Patches
 	{
 		public static string Name = "Stairs";
-		public static string Version = "1.21";
+		public static string Version = "1.22";
 
 		public static readonly Tag tag_Stairs = TagManager.Create("Stairs");
+		public static bool ChainedDeconstruction = false;
 		public static class Mod_OnLoad
 		{
 			public static void OnLoad()
@@ -131,6 +150,18 @@ namespace Stairs
 			public static void Postfix()
 			{
 				MyGrid.Masks = new MyGrid.Flags[Grid.CellCount];
+				// 查看ChainedDeconstruction是否已启用
+				ChainedDeconstruction = false;
+				foreach (Mod mod in Global.Instance.modManager.mods)
+				{
+					if (!mod.enabled) continue;
+					if (mod.title == "ChainedDeconstruction")
+					{
+						ChainedDeconstruction = true;
+						Debug.Log("[MOD] Stairs : ChainedDeconstruction Enable");
+						break;
+					}
+				}
 			}
 		}
 

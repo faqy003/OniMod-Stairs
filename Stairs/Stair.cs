@@ -220,8 +220,21 @@ namespace Stairs
 		{
 			base.OnCleanUp();
 			int cell = Grid.PosToCell(this);
+			bool isscaff = MyGrid.IsScaffolding(cell);
 			MyGrid.Masks[cell] = 0;
+			if (isscaff) MyGrid.Masks[cell] |= MyGrid.Flags.HasScaffolding;
 			Pathfinding.Instance.AddDirtyNavGridCell(cell);
+			//if (Patches.ChainedDeconstruction)
+			//{
+			//	Deconstructable deconstructable = base.GetComponent<Deconstructable>();
+			//	if (deconstructable != null && deconstructable.IsMarkedForDeconstruction())
+			//	{
+			//		MyGrid.ForceDeconstruction(Grid.CellAbove(cell));
+			//		MyGrid.ForceDeconstruction(Grid.CellBelow(cell));
+			//		MyGrid.ForceDeconstruction(Grid.CellLeft(cell));
+			//		MyGrid.ForceDeconstruction(Grid.CellRight(cell));
+			//	}
+			//}
 		}
 
 		public List<Descriptor> GetDescriptors(BuildingDef def)
