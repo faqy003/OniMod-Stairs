@@ -28,10 +28,19 @@
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
+    <DefineConstants>TRACE;VANILLA</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release-DLC1|AnyCPU'">
+    <OutputPath>bin\Release-DLC1\</OutputPath>
+    <DefineConstants>TRACE;DLC1</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <LangVersion>7.3</LangVersion>
+    <ErrorReport>prompt</ErrorReport>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="0Harmony">
@@ -59,13 +68,8 @@
     <Compile Include="scaffolding.cs" />
     <Compile Include="Stair.cs" />
   </ItemGroup>
-  <ItemGroup>
-    <None Include="..\.editorconfig">
-      <Link>.editorconfig</Link>
-    </None>
-  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>copy /Y "$(TargetPath)" "K:\My Documents\Klei\OxygenNotIncluded\mods\dev\Stairs\"</PostBuildEvent>
+    <PostBuildEvent>copy /Y "$(TargetPath)" "K:\My Documents\Klei\OxygenNotIncluded\mods\dev\Stairs\archived_versions\vanilla\"</PostBuildEvent>
   </PropertyGroup>
 </Project>

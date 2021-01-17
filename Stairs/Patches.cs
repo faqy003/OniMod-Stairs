@@ -106,21 +106,31 @@ namespace Stairs
 	public class Patches
 	{
 		public static string Name = "Stairs";
-		public static string Version = "1.22";
+		public static string Version = "1.23";
 
 		public static readonly Tag tag_Stairs = TagManager.Create("Stairs");
 		public static bool ChainedDeconstruction = false;
+
 		public static class Mod_OnLoad
 		{
 			public static void OnLoad()
 			{
 			}
 		}
+#if VANILLA
 		private static void AddBuildingToTechnology(string tech, string buildingId)
 		{
 			var techList = new List<string>(Database.Techs.TECH_GROUPING[tech]) { buildingId };
 			Database.Techs.TECH_GROUPING[tech] = techList.ToArray();
 		}
+#elif DLC1
+		private static void AddBuildingToTechnology(Db db,string tech, string buildingId)
+		{
+			Tech t = db.Techs.TryGet(tech);
+			if (t == null) return;
+			t.unlockedItemIDs.Add(buildingId);
+		}
+#endif
 		public static void AddBuildingToPlanScreen(HashedString category, string buildingId, string addAfterBuildingId = null)
 		{
 			var index = TUNING.BUILDINGS.PLANORDER.FindIndex(x => x.category == category);
@@ -227,10 +237,18 @@ namespace Stairs
 					Strings.Add($"STRINGS.BUILDINGS.PREFABS.URFSCAFFOLDING.DESC", $"(It's not very stable, any climbing is not recommended.)");
 					Strings.Add($"STRINGS.BUILDINGS.PREFABS.URFSCAFFOLDING.EFFECT", $"Thin plate that fast to build, allow Duplicants walk on it and can stack with other building.");
 				}
+#if VANILLA
 				AddBuildingToTechnology("Luxury", Stairs.StairsAlt1Config.ID);
-				AddBuildingToTechnology("RefinedObjects", Stairs.StairsConfig.ID);
 				AddBuildingToTechnology("RefinedObjects", Stairs.ScaffoldingConfig.ID);
+#endif
 			}
+#if DLC1
+			public static void Postfix(ref Db __instance)
+			{
+				AddBuildingToTechnology(__instance,"Luxury",Stairs.StairsAlt1Config.ID);
+				AddBuildingToTechnology(__instance,"RefinedObjects",Stairs.ScaffoldingConfig.ID);
+			}
+#endif
 		}
 
 		// ------------- 补丁 -----------------
