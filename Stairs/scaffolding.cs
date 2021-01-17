@@ -89,7 +89,6 @@ namespace Stairs
 			}
 		}
 
-
 		[Serialize]
 		private bool buildingEnabled = true;
 

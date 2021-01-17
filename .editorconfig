@@ -1,7 +1,0 @@
-﻿[*.{cs,vb}]
-
-# IDE0060: 删除未使用的参数
-dotnet_code_quality_unused_parameters = non_public:suggestion
-
-# CS1522: 空的 switch 块
-dotnet_diagnostic.CS1522.severity = none
