@@ -189,7 +189,7 @@ namespace Stairs
 		//};
 	}
 
-	public class Stair : KMonoBehaviour, IEffectDescriptor
+	public class Stair : KMonoBehaviour, IGameObjectEffectDescriptor
 	{
 		protected override void OnPrefabInit()
 		{
@@ -237,7 +237,7 @@ namespace Stairs
 			//}
 		}
 
-		public List<Descriptor> GetDescriptors(BuildingDef def)
+		public List<Descriptor> GetDescriptors(GameObject go)
 		{
 			List<Descriptor> list = null;
 			if (this.upwardsMovementSpeedMultiplier != 1f)
@@ -272,7 +272,8 @@ namespace Stairs
 				new KIconButtonMenu.ButtonInfo("action_direction_both", Strings.Get("STRINGS.UI.USERMENUACTIONS.STAIRSBLOCK.NAME_OFF"), new System.Action(this.OnResume), Action.NumActions, null, null, null, Strings.Get("STRINGS.UI.USERMENUACTIONS.STAIRSBLOCK.TOOLTIP_OFF"), true);
 			Game.Instance.userMenu.AddButton(base.gameObject, button, 1f);
 		}
-		private static readonly EventSystem.IntraObjectHandler<Stair> OnRefreshUserMenuDelegate = new EventSystem.IntraObjectHandler<Stair>(delegate (Stair component, object data)
+
+        private static readonly EventSystem.IntraObjectHandler<Stair> OnRefreshUserMenuDelegate = new EventSystem.IntraObjectHandler<Stair>(delegate (Stair component, object data)
 		{
 			component.OnRefreshUserMenu(data);
 		});

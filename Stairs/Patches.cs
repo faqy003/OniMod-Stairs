@@ -1,4 +1,4 @@
-﻿using Harmony;
+﻿using HarmonyLib;
 using KMod;
 using STRINGS;
 using System;
@@ -103,20 +103,17 @@ namespace Stairs
 			return false;
 		}
 	}
-	public class Patches
+	public class Patches : KMod.UserMod2
 	{
-		public static string Name = "Stairs";
-		public static string Version = "1.23";
+		//public static string Name = "Stairs";
+		//public static string Version = "1.23";
 
 		public static readonly Tag tag_Stairs = TagManager.Create("Stairs");
 		public static bool ChainedDeconstruction = false;
 
-		public static class Mod_OnLoad
-		{
-			public static void OnLoad()
-			{
-			}
-		}
+		//public override void OnLoad(Harmony harmony)
+		//{
+		//}
 #if VANILLA
 		private static void AddBuildingToTechnology(string tech, string buildingId)
 		{
@@ -376,117 +373,138 @@ namespace Stairs
 		}
 
 		// 寻路限制
+		public static bool PathFilter(ref bool __result, ref PathFinder.PotentialPath path, int from_cell, NavType from_nav_type, int cost, int transition_id, int underwater_cost)
+		{
+			int cell = path.cell;
+			if (MyGrid.IsBlocked(cell))
+			{
+				__result = false;
+				return false;
+			}
+			if (path.navType != NavType.Floor || from_nav_type != NavType.Floor) return true;
+
+			int f_b = Grid.CellBelow(from_cell);
+			bool cellNotStair = !MyGrid.IsStair(cell);
+			bool fromStair = MyGrid.IsStair(from_cell);
+			bool fromNotScaff = !MyGrid.IsScaffolding(from_cell);
+			//if (!MyGrid.IsStair(f_b) && !fromStair && cellNotStair && !MyGrid.IsScaffolding(cell) && fromNotScaff) return true;
+
+			CellOffset offset = Grid.GetOffset(from_cell, cell);
+
+			bool goUpAndStr = offset.y >= 0;
+			if (goUpAndStr)
+			{
+				bool goStraight = offset.y == 0;
+				if (fromStair && goStraight)
+					return true;
+				if (!fromNotScaff && goStraight)
+					return true;
+				bool flag = true;
+
+				int f_a = Grid.CellAbove(from_cell);
+				if (offset.y > 1)
+				{
+					int f_a_a = Grid.CellAbove(f_a);
+					if (MyGrid.IsScaffolding(f_a) || MyGrid.IsScaffolding(f_a_a)) flag = false;
+				}
+				else if (offset.y == 1)
+				{
+					if (MyGrid.IsScaffolding(cell))
+					{
+						if (MyGrid.IsWalkable(f_b))
+						{
+							int c_b = Grid.CellBelow(cell);
+							if (!MyGrid.IsWalkable(c_b)) flag = false;
+						}
+						else if (MyGrid.IsScaffolding(f_a))
+							flag = false;
+					}
+					else if (MyGrid.IsScaffolding(f_a))
+						flag = false;
+				}
+
+				if (MyGrid.IsRightSet(f_b))
+				{
+					if (!fromStair)
+					{
+						if (goUpAndStr && flag) return true;
+						else if (offset.x > 0 && flag) return true;
+					}
+				}
+				else
+				{
+					if (!fromStair)
+					{
+						if (goUpAndStr && flag) return true;
+						else if (offset.x < 0 && flag) return true;
+					}
+				}
+			}
+			else if (cellNotStair)
+			{
+				if (offset.x > 0)
+				{
+					int f_r = Grid.CellRight(from_cell);
+					if (offset.y == -1)
+					{
+						if (MyGrid.IsRightSet(f_b) && MyGrid.IsStair(f_b))
+						{
+							if (!fromStair) return true;
+						}
+						else if (!MyGrid.IsScaffolding(f_r)) return true;
+					}
+					else
+					{
+						int f_b_r = Grid.CellRight(f_b);
+						if (!MyGrid.IsStair(f_b_r) && !MyGrid.IsScaffolding(f_r) && !MyGrid.IsScaffolding(f_b_r)) return true;
+					}
+				}
+				else if (offset.x < 0)
+				{
+					int f_l = Grid.CellLeft(from_cell);
+					if (offset.y == -1)
+					{
+						if (!MyGrid.IsRightSet(f_b) && MyGrid.IsStair(f_b))
+						{
+							if (!fromStair) return true;
+						}
+						else if (!MyGrid.IsScaffolding(f_l)) return true;
+					}
+					else
+					{
+						int f_b_l = Grid.CellLeft(f_b);
+						if (!MyGrid.IsStair(f_b_l) && !MyGrid.IsScaffolding(f_l) && !MyGrid.IsScaffolding(f_b_l)) return true;
+					}
+				}
+				else
+				{
+					if (fromNotScaff) return true;
+				}
+
+			}
+
+			__result = false;
+			return false;
+		}
+
+		[HarmonyPatch(typeof(CreaturePathFinderAbilities))]
+		[HarmonyPatch("TraversePath")]
+		public static class CreatureTraversePath_Patch
+		{
+			public static bool Prefix(Navigator ___navigator, ref bool __result, ref PathFinder.PotentialPath path, int from_cell, NavType from_nav_type, int cost, int transition_id, int underwater_cost)
+			{
+				if (___navigator.NavGridName != "RobotNavGrid") return true;
+				return PathFilter(ref __result, ref path, from_cell, from_nav_type, cost, transition_id, underwater_cost);
+			}
+		}
+
 		[HarmonyPatch(typeof(MinionPathFinderAbilities))]
 		[HarmonyPatch("TraversePath")]
 		public static class TraversePath_Patch
 		{
 			public static bool Prefix(ref bool __result, ref PathFinder.PotentialPath path, int from_cell, NavType from_nav_type, int cost, int transition_id, int underwater_cost)
 			{
-				int cell = path.cell;
-				if (MyGrid.IsBlocked(cell))
-				{
-					__result = false;
-					return false;
-				}
-				if (path.navType != NavType.Floor || from_nav_type != NavType.Floor) return true;
-
-				int f_b = Grid.CellBelow(from_cell);
-				bool cellNotStair = !MyGrid.IsStair(cell);
-				bool fromStair = MyGrid.IsStair(from_cell);
-				bool fromNotScaff = !MyGrid.IsScaffolding(from_cell);
-				//if (!MyGrid.IsStair(f_b) && !fromStair && cellNotStair && !MyGrid.IsScaffolding(cell) && fromNotScaff) return true;
-
-				CellOffset offset = Grid.GetOffset(from_cell, cell);
-
-				bool goUpAndStr = offset.y >= 0;
-				if (goUpAndStr)
-				{
-					bool goStraight = offset.y == 0;
-					if (fromStair && goStraight)
-						return true;
-					if (!fromNotScaff && goStraight)
-						return true;
-					bool flag = true;
-
-					int f_a = Grid.CellAbove(from_cell);
-					if (offset.y > 1)
-					{
-						int f_a_a = Grid.CellAbove(f_a);
-						if (MyGrid.IsScaffolding(f_a) || MyGrid.IsScaffolding(f_a_a)) flag = false;
-					}else if(offset.y == 1)
-					{
-						if (MyGrid.IsScaffolding(cell)) {
-							if (MyGrid.IsWalkable(f_b))
-							{
-								int c_b = Grid.CellBelow(cell);
-								if (!MyGrid.IsWalkable(c_b)) flag = false;
-							}
-							else if (MyGrid.IsScaffolding(f_a) )
-								flag = false;
-						}
-						else if (MyGrid.IsScaffolding(f_a))
-							flag = false;
-					}
-
-					if (MyGrid.IsRightSet(f_b))
-					{
-						if (!fromStair)
-						{
-							if(goUpAndStr && flag) return true;
-							else if (offset.x > 0 && flag) return true;
-						}
-					}
-					else
-					{
-						if (!fromStair)
-						{
-							if (goUpAndStr && flag) return true;
-							else if (offset.x < 0 && flag) return true;
-						}
-					}
-				}
-				else if (cellNotStair)
-				{
-					if (offset.x > 0) {
-						int f_r = Grid.CellRight(from_cell);
-						if(offset.y == -1)
-						{
-							if (MyGrid.IsRightSet(f_b) && MyGrid.IsStair(f_b)) { 
-								if (!fromStair) return true;
-							}
-							else if (!MyGrid.IsScaffolding(f_r)) return true;
-						}
-						else
-						{
-							int f_b_r = Grid.CellRight(f_b);
-							if (!MyGrid.IsStair(f_b_r) && !MyGrid.IsScaffolding(f_r) && !MyGrid.IsScaffolding(f_b_r)) return true;
-						}
-					}
-					else if (offset.x < 0)
-					{
-						int f_l = Grid.CellLeft(from_cell);
-						if (offset.y == -1)
-						{
-							if (!MyGrid.IsRightSet(f_b) && MyGrid.IsStair(f_b)) {
-								if(!fromStair) return true;
-							}
-							else if (!MyGrid.IsScaffolding(f_l)) return true;
-						}
-						else
-						{
-							int f_b_l = Grid.CellLeft(f_b);
-							if (!MyGrid.IsStair(f_b_l) && !MyGrid.IsScaffolding(f_l) && !MyGrid.IsScaffolding(f_b_l)) return true;
-						}
-					}
-					else
-					{
-						if (fromNotScaff) return true;
-					}
-					
-				}
-
-				__result = false;
-				return false;
+				return PathFilter(ref __result, ref path, from_cell, from_nav_type, cost, transition_id, underwater_cost);
 			}
 		}
 
