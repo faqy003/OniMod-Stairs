@@ -105,9 +105,6 @@ namespace Stairs
 	}
 	public class Patches : KMod.UserMod2
 	{
-		//public static string Name = "Stairs";
-		//public static string Version = "1.23";
-
 		public static readonly Tag tag_Stairs = TagManager.Create("Stairs");
 		public static bool ChainedDeconstruction = false;
 
@@ -130,10 +127,11 @@ namespace Stairs
 #endif
 		public static void AddBuildingToPlanScreen(HashedString category, string buildingId, string addAfterBuildingId = null)
 		{
-			var index = TUNING.BUILDINGS.PLANORDER.FindIndex(x => x.category == category);
-
-			if (index == -1)
+			int index = TUNING.BUILDINGS.PLANORDER.FindIndex((PlanScreen.PlanInfo x) => x.category == category);
+			if (index < 0)
+			{
 				return;
+			}
 
 			if (!(TUNING.BUILDINGS.PLANORDER[index].data is IList<string> planOrderList))
 			{
@@ -188,9 +186,9 @@ namespace Stairs
 		{
 			public static void Postfix()
 			{
-				AddBuildingToPlanScreen("Base", Stairs.StairsAlt1Config.ID, FirePoleConfig.ID);
-				AddBuildingToPlanScreen("Base", Stairs.StairsConfig.ID, FirePoleConfig.ID);
-				AddBuildingToPlanScreen("Base", Stairs.ScaffoldingConfig.ID, FirePoleConfig.ID);
+				ModUtil.AddBuildingToPlanScreen("Base", Stairs.StairsConfig.ID, "ladders");
+				ModUtil.AddBuildingToPlanScreen("Base", Stairs.ScaffoldingConfig.ID, "ladders");
+				ModUtil.AddBuildingToPlanScreen("Base", Stairs.StairsAlt1Config.ID, "ladders");
 			}
 		}
 
