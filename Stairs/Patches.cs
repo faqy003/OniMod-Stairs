@@ -186,9 +186,9 @@ namespace Stairs
 		{
 			public static void Postfix()
 			{
-				ModUtil.AddBuildingToPlanScreen("Base", Stairs.StairsConfig.ID, "ladders");
-				ModUtil.AddBuildingToPlanScreen("Base", Stairs.ScaffoldingConfig.ID, "ladders");
-				ModUtil.AddBuildingToPlanScreen("Base", Stairs.StairsAlt1Config.ID, "ladders");
+				ModUtil.AddBuildingToPlanScreen("Base", Stairs.StairsConfig.ID, "ladders", "FirePole");
+				ModUtil.AddBuildingToPlanScreen("Base", Stairs.ScaffoldingConfig.ID, "ladders", Stairs.StairsConfig.ID);
+				ModUtil.AddBuildingToPlanScreen("Base", Stairs.StairsAlt1Config.ID, "ladders", Stairs.ScaffoldingConfig.ID);
 			}
 		}
 
