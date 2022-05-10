@@ -5,12 +5,47 @@ using UnityEngine;
 
 namespace Stairs
 {
+	public class BuidingTemplates
+    {
+		public static BuildingDef CreateStairsDef(string id, string anim, float[] construction_mass, string[] construction_materials)
+		{
+			int width = 1;
+			int height = 1;
+			int hitpoints = 10;
+			float construction_time = 10f;
+
+			float melting_point = BUILDINGS.MELTING_POINT_KELVIN.TIER2;
+			BuildLocationRule build_location_rule = BuildLocationRule.Anywhere;
+			EffectorValues none = NOISE_POLLUTION.NONE;
+			BuildingDef buildingDef = BuildingTemplates.CreateBuildingDef(id, width, height, anim, hitpoints, construction_time, construction_mass, construction_materials, melting_point, build_location_rule, BUILDINGS.DECOR.BONUS.TIER0, none, 0.2f);
+			buildingDef.Floodable = false;
+			buildingDef.Entombable = false;
+			buildingDef.Overheatable = false;
+			buildingDef.AudioCategory = "Metal";
+			buildingDef.AudioSize = "small";
+			buildingDef.BaseTimeUntilRepair = -1f;
+			buildingDef.DragBuild = true;
+			buildingDef.IsFoundation = false;
+			buildingDef.BaseDecor = -2f;
+			buildingDef.TileLayer = ObjectLayer.LadderTile;
+			buildingDef.PermittedRotations = PermittedRotations.FlipH;
+
+			buildingDef.ReplacementLayer = ObjectLayer.ReplacementLadder;
+			List<Tag> list = new List<Tag>();
+			list.Add(Patches.tag_Stairs);
+			buildingDef.ReplacementTags = list;
+			List<ObjectLayer> list2 = new List<ObjectLayer>();
+			list2.Add(ObjectLayer.ReplacementTile);
+			buildingDef.EquivalentReplacementLayers = list2;
+
+			return buildingDef;
+		}
+	}
 	public class ScaffoldingConfig : IBuildingConfig
 	{
 		public const string ID = "urfScaffolding";
 		public override BuildingDef CreateBuildingDef()
 		{
-			string id = "urfScaffolding";
 			int width = 1;
 			int height = 1;
 			string anim = "scaffolding_kanim";
@@ -30,7 +65,7 @@ namespace Stairs
 			float melting_point = BUILDINGS.MELTING_POINT_KELVIN.TIER2;
 			BuildLocationRule build_location_rule = BuildLocationRule.NotInTiles;
 			EffectorValues none = NOISE_POLLUTION.NONE;
-			BuildingDef buildingDef = BuildingTemplates.CreateBuildingDef(id, width, height, anim, hitpoints, construction_time, construction_mass, construction_materials, melting_point, build_location_rule, BUILDINGS.DECOR.BONUS.TIER0, none, 1f);
+			BuildingDef buildingDef = BuildingTemplates.CreateBuildingDef(ID, width, height, anim, hitpoints, construction_time, construction_mass, construction_materials, melting_point, build_location_rule, BUILDINGS.DECOR.BONUS.TIER0, none, 1f);
 			buildingDef.Floodable = false;
 			buildingDef.Entombable = false;
 			buildingDef.Overheatable = false;
@@ -70,13 +105,6 @@ namespace Stairs
 		public static string ID = "Stairs";
 		public override BuildingDef CreateBuildingDef()
 		{
-			string id = "Stairs";
-			int width = 1;
-			int height = 1;
-			string anim = "stairs_kanim";
-			int hitpoints = 10;
-			float construction_time = 10f;
-
 			//耗费材料
 			float[] construction_mass = new float[]
 			{
@@ -89,29 +117,7 @@ namespace Stairs
 				"Metal"
 			};
 
-			float melting_point = BUILDINGS.MELTING_POINT_KELVIN.TIER2;
-			BuildLocationRule build_location_rule = BuildLocationRule.Anywhere;
-			EffectorValues none = NOISE_POLLUTION.NONE;
-			BuildingDef buildingDef = BuildingTemplates.CreateBuildingDef(id, width, height, anim, hitpoints, construction_time, construction_mass, construction_materials, melting_point, build_location_rule, BUILDINGS.DECOR.BONUS.TIER0, none, 0.2f);
-			buildingDef.Floodable = false;
-			buildingDef.Entombable = false;
-			buildingDef.Overheatable = false;
-			buildingDef.AudioCategory = "Metal";
-			buildingDef.AudioSize = "small";
-			buildingDef.BaseTimeUntilRepair = -1f;
-			buildingDef.DragBuild = true;
-			buildingDef.IsFoundation = false;
-			buildingDef.BaseDecor = -2f;
-			buildingDef.TileLayer = ObjectLayer.LadderTile;
-			buildingDef.PermittedRotations = PermittedRotations.FlipH;
-
-			buildingDef.ReplacementLayer = ObjectLayer.ReplacementLadder;
-			List<Tag> list = new List<Tag>();
-			list.Add(Patches.tag_Stairs);
-			buildingDef.ReplacementTags = list;
-			List<ObjectLayer> list2 = new List<ObjectLayer>();
-			list2.Add(ObjectLayer.ReplacementTile);
-			buildingDef.EquivalentReplacementLayers = list2;
+			var buildingDef = BuidingTemplates.CreateStairsDef(ID, "stairs_kanim",construction_mass,construction_materials);
 
 			return buildingDef;
 		}
@@ -137,13 +143,6 @@ namespace Stairs
 		public static string ID = "Stairs_Alt1";
 		public override BuildingDef CreateBuildingDef()
 		{
-			string id = "Stairs_Alt1";
-			int width = 1;
-			int height = 1;
-			string anim = "stairs_alt1_kanim";
-			int hitpoints = 10;
-			float construction_time = 10f;
-
 			//耗费材料
 			float[] construction_mass = new float[]
 			{
@@ -155,31 +154,9 @@ namespace Stairs
 				MATERIALS.REFINED_METAL,
 				MATERIALS.GLASS
 			};
-
-			float melting_point = BUILDINGS.MELTING_POINT_KELVIN.TIER2;
-			BuildLocationRule build_location_rule = BuildLocationRule.Anywhere;
-			EffectorValues none = NOISE_POLLUTION.NONE;
-			BuildingDef buildingDef = BuildingTemplates.CreateBuildingDef(id, width, height, anim, hitpoints, construction_time, construction_mass, construction_materials, melting_point, build_location_rule, BUILDINGS.DECOR.BONUS.TIER0, none, 0.2f);
-			buildingDef.Floodable = false;
-			buildingDef.Entombable = false;
-			buildingDef.Overheatable = false;
-			buildingDef.AudioCategory = "Metal";
-			buildingDef.AudioSize = "small";
-			buildingDef.BaseTimeUntilRepair = -1f;
-			buildingDef.DragBuild = true;
-			buildingDef.IsFoundation = false;
+			var buildingDef = BuidingTemplates.CreateStairsDef(ID, "stairs_alt1_kanim", construction_mass, construction_materials);
 			buildingDef.BaseDecor = 8f;
 			buildingDef.BaseDecorRadius = 2f;
-			buildingDef.TileLayer = ObjectLayer.LadderTile;
-			buildingDef.PermittedRotations = PermittedRotations.FlipH;
-
-			buildingDef.ReplacementLayer = ObjectLayer.ReplacementLadder;
-			List<Tag> list = new List<Tag>();
-			list.Add(Patches.tag_Stairs);
-			buildingDef.ReplacementTags = list;
-			List<ObjectLayer> list2 = new List<ObjectLayer>();
-			list2.Add(ObjectLayer.ReplacementTile);
-			buildingDef.EquivalentReplacementLayers = list2;
 
 			return buildingDef;
 		}
