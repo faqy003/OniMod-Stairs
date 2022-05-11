@@ -8,7 +8,7 @@ using System.IO;
 
 namespace Stairs
 {
-	public class MyGrid
+    public class MyGrid
 	{
 		public static void ForceDeconstruction(int cell, bool isStairs = true)
 		{
@@ -62,115 +62,7 @@ namespace Stairs
 		}
 		public static Flags[] Masks;
 	}
-    public class MyTransitionLayer : TransitionDriver.OverrideLayer
-    {
-        public MyTransitionLayer(Navigator navigator) : base(navigator)
-        {
-			isMovingOnStaris = false;
-        }
-        public override void BeginTransition(Navigator navigator, Navigator.ActiveTransition transition)
-        {
-            base.BeginTransition(navigator, transition);
-			if (transition.navGridTransition.isCritter) return;
-			if (transition.y != 1 && transition.y != -1) return;
-			if (transition.x != 1 && transition.x != -1) return;
-			if (transition.start != NavType.Floor || transition.end != NavType.Floor) return;
-			int num = Grid.PosToCell(navigator);
-			//if (MyGrid.IsStair(num)) return;
-			if (transition.y > 0)
-			{
-				num = Grid.OffsetCell(num, transition.x, 0);
-				if (transition.x > 0)
-				{
-					if (MyGrid.IsRightSet(num)) return;
-				}
-				else
-				{
-					if (!MyGrid.IsRightSet(num)) return;
-				}
-			}
-			else
-			{
-				num = Grid.OffsetCell(num, 0, transition.y);
-				if (transition.x > 0)
-				{
-					if (!MyGrid.IsRightSet(num)) return;
-				}
-				else
-				{
-					if (MyGrid.IsRightSet(num)) return;
-				}
-			}
-			if (!MyGrid.IsWalkable(num)) return;
-
-
-			if (transition.y > 0)
-			{
-				transition.speed *= 0.9f;
-				transition.animSpeed *= 0.9f;
-			}
-			else if (transition.y < 0)
-			{
-				transition.speed *= 1.5f;
-				transition.animSpeed *= 1.5f;
-			}
-
-			transition.isLooping = true;
-			transition.anim = "floor_floor_1_0_loop";
-			isMovingOnStaris =true;
-			this.startTime = Time.timeSinceLevelLoad;
-			int cell = Grid.PosToCell(navigator);
-			int target_cell = Grid.OffsetCell(cell, transition.x, transition.y);
-			this.targetPos = Grid.CellToPosCBC(target_cell, navigator.sceneLayer);
-		}
-        public override void UpdateTransition(Navigator navigator, Navigator.ActiveTransition transition)
-        {
-            base.UpdateTransition(navigator, transition);
-			if (!isMovingOnStaris) return;
-			transition.isLooping=false;
-            Vector3 Offset = Vector3.zero;
-            float step = (Time.timeSinceLevelLoad - this.startTime) * transition.speed;
-
-            if (transition.y > 0)
-            {
-                Offset.y += step;
-            }
-            else if (transition.y < 0)
-            {
-                Offset.y -= step;
-            }
-            if (transition.x > 0)
-            {
-                Offset.x += step;
-            }
-            else if (transition.x < 0)
-            {
-                Offset.x -= step;
-            }
-            Vector3 pos = navigator.transform.GetPosition() + Offset;
-			if ((transition.y > 0 && pos.y > targetPos.y) || (transition.y < 0 && pos.y < targetPos.y))
-            {
-				transition.isLooping = true;
-				navigator.transform.position = pos;
-				return;
-            }
-
-            KBatchedAnimController controller = navigator.GetComponent<KBatchedAnimController>();
-            controller.Offset = Offset;
-        }
-		public override void EndTransition(Navigator navigator, Navigator.ActiveTransition transition)
-        {
-            base.EndTransition(navigator, transition);
-			if (navigator == null) return;
-			KBatchedAnimController controller = navigator.GetComponent<KBatchedAnimController>();
-			controller.Offset = Vector3.zero;
-			isMovingOnStaris = false;
-        }
-        public bool isMovingOnStaris;
-		public float startTime;
-        private Vector3 targetPos;
-    }
-    public class ScaffoldingValidator : NavTableValidator
+	public class ScaffoldingValidator : NavTableValidator
 	{
 		public ScaffoldingValidator()
 		{
@@ -296,40 +188,6 @@ namespace Stairs
 			{
 				if (Localization.GetLocale()!=null)
 					LoadStrings(Path.Combine(sPath, "loc", Localization.GetLocale().Code + ".po"));
-				//Localization.Locale locale = Localization.GetLocale();
-				//if (locale != null && locale.Code == "zh")
-				//{
-				//    Strings.Add($"STRINGS.BUILDINGS.PREFABS.STAIRS.NAME", $"台阶");
-				//    Strings.Add($"STRINGS.BUILDINGS.PREFABS.STAIRS.DESC", $"（在发明了火箭之后我们甚至发明出了台阶）");
-				//    Strings.Add($"STRINGS.BUILDINGS.PREFABS.STAIRS.EFFECT", $"使复制人可以步行上下，节省力气。\n\n下台阶的速度会很快，向上则会稍慢。\n如果没有建造在可行走的方格上可能会无法正常工作。");
-				//    Strings.Add($"STRINGS.UI.USERMENUACTIONS.STAIRSBLOCK.NAME", $"禁止通过");
-				//    Strings.Add($"STRINGS.UI.USERMENUACTIONS.STAIRSBLOCK.NAME_OFF", $"允许通过");
-				//    Strings.Add($"STRINGS.UI.USERMENUACTIONS.STAIRSBLOCK.TOOLTIP", $"禁止复制人从此步行通过。");
-				//    Strings.Add($"STRINGS.UI.USERMENUACTIONS.STAIRSBLOCK.TOOLTIP_OFF", $"允许复制人从此步行通过。");
-				//    Strings.Add($"STRINGS.BUILDINGS.PREFABS.STAIRS_ALT1.NAME", $"豪华台阶");
-				//    Strings.Add($"STRINGS.BUILDINGS.PREFABS.STAIRS_ALT1.DESC", $"");
-				//    Strings.Add($"STRINGS.BUILDINGS.PREFABS.STAIRS_ALT1.EFFECT", $"除了用料比较豪华外，使用上与普通台阶没有什么不同。");
-				//    Strings.Add($"STRINGS.BUILDINGS.PREFABS.URFSCAFFOLDING.NAME", $"脚手架");
-				//    Strings.Add($"STRINGS.BUILDINGS.PREFABS.URFSCAFFOLDING.DESC", $"（由于不太结实，不建议在上面攀爬）");
-				//    Strings.Add($"STRINGS.BUILDINGS.PREFABS.URFSCAFFOLDING.EFFECT", $"一种可以快速建造的薄板，可供复制人在上面行走并能与其他建筑叠加。");
-				//}
-				//else
-				//{
-				//    Strings.Add($"STRINGS.BUILDINGS.PREFABS.STAIRS.NAME", $"Stairs");
-				//    Strings.Add($"STRINGS.BUILDINGS.PREFABS.STAIRS.DESC", $"(After we made Space Rocket we even invent Stairs)");
-				//    Strings.Add($"STRINGS.BUILDINGS.PREFABS.STAIRS.EFFECT", $"Saving your energy by step up and down.\n\nWalking down strair will be easy and fast ,and tiny slower when walking up.\n" +
-				//        $"It may not working correctly when built on an unwalkble floor.");
-				//    Strings.Add($"STRINGS.UI.USERMENUACTIONS.STAIRSBLOCK.NAME", $"Block Path");
-				//    Strings.Add($"STRINGS.UI.USERMENUACTIONS.STAIRSBLOCK.NAME_OFF", $"Unblock Path");
-				//    Strings.Add($"STRINGS.UI.USERMENUACTIONS.STAIRSBLOCK.TOOLTIP", $"Prevent Duplicants walk through here.");
-				//    Strings.Add($"STRINGS.UI.USERMENUACTIONS.STAIRSBLOCK.TOOLTIP_OFF", $"Allow Duplicants walk through here.");
-				//    Strings.Add($"STRINGS.BUILDINGS.PREFABS.STAIRS_ALT1.NAME", $"Deluxe Stairs");
-				//    Strings.Add($"STRINGS.BUILDINGS.PREFABS.STAIRS_ALT1.DESC", $"");
-				//    Strings.Add($"STRINGS.BUILDINGS.PREFABS.STAIRS_ALT1.EFFECT", $"In addition to the better material, there is no different from normal stairs.");
-				//    Strings.Add($"STRINGS.BUILDINGS.PREFABS.URFSCAFFOLDING.NAME", $"Scaffolding");
-				//    Strings.Add($"STRINGS.BUILDINGS.PREFABS.URFSCAFFOLDING.DESC", $"(It's not very stable, any climbing is not recommended.)");
-				//    Strings.Add($"STRINGS.BUILDINGS.PREFABS.URFSCAFFOLDING.EFFECT", $"Thin plate that fast to build, allow Duplicants walk on it and can stack with other building.");
-				//}
 			}
 			public static void Postfix(ref Db __instance)
 			{
@@ -349,111 +207,22 @@ namespace Stairs
 				Navigator navigator = go.GetComponent<Navigator>();
 				navigator.transitionDriver.overrideLayers.Add(new MyTransitionLayer(navigator));
 			}
+		}
+
+		//安全感知修正
+		[HarmonyPatch(typeof(SafeCellSensor))]
+		[HarmonyPatch("Update")]
+		public class SafeCellSensor_Patch
+        {
+			public static bool Prefix(Navigator ___navigator)
+			{
+				if(___navigator == null) return true;
+				if (!MyGrid.IsStair(Grid.PosToCell(___navigator))) return true;
+                MyTransitionLayer layer = (MyTransitionLayer)___navigator.transitionDriver.overrideLayers.Find(x => x.GetType() == typeof(MyTransitionLayer));
+                if (layer == null || !layer.isMovingOnStaris) return true;
+                return false;
+            }
         }
-
-
-		//路径检测
-		//[HarmonyPatch(typeof(TransitionDriver))]
-		//      [HarmonyPatch("UpdateTransition")]
-		//      public static class KMonoBehaviour_Trigger_Patch
-		//      {
-		//          public static void Prefix(float dt, ref TransitionDriver __instance, Navigator ___navigator, Vector3 ___targetPos,ref bool ___isComplete)
-		//          {
-		//		if (___navigator == null) return;
-		//		MyTransitionLayer layer = (MyTransitionLayer)__instance.overrideLayers.Find(x => x.GetType() == typeof(MyTransitionLayer));
-		//		if (layer == null || !layer.isMovingOnStaris) return;
-		//              Navigator.ActiveTransition transition = __instance.GetTransition;
-		//		KBatchedAnimController controller = ___navigator.GetComponent<KBatchedAnimController>();
-		//		Vector3 Offset = controller.Offset;
-		//		float speed = dt * transition.speed;
-
-		//		if(transition.y > 0)
-		//              {
-		//			Offset.y += speed;
-		//              }
-		//              else if (transition.y < 0)
-		//		{
-		//			Offset.y -= speed;
-		//		}
-		//		if(transition.x > 0)
-		//              {
-		//			Offset.x += speed;
-		//              }
-		//              else if(transition.x < 0)
-		//              {
-		//			Offset.x -= speed;
-		//              }
-		//              Vector3 pos = ___navigator.transform.GetPosition() + Offset;
-		//		if ((transition.y > 0 && pos.y > ___targetPos.y)|| (transition.y < 0 && pos.y < ___targetPos.y)) {
-		//			controller.Offset = Vector3.zero;
-		//			___isComplete = true;
-		//			return;
-		//		}
-
-		//		controller.Offset = Offset;
-		//          }
-		//      }
-
-		// 动画与移动速度
-		//[HarmonyPatch(typeof(TransitionDriver))]
-		//[HarmonyPatch("BeginTransition")]
-		//public static class Navigator_BeginTransition_Patch
-		//{
-		//	public static void Prefix(Navigator navigator, ref Navigator.ActiveTransition transition, ref bool __state)
-		//	{
-		//		__state = false;
-		//		if (transition.navGridTransition.isCritter) return;
-		//		if (transition.y != 1 && transition.y != -1) return;
-		//		if (transition.x != 1 && transition.x != -1) return;
-		//		if (transition.start != NavType.Floor || transition.end != NavType.Floor) return;
-		//		int num = Grid.PosToCell(navigator);
-		//		//if (MyGrid.IsStair(num)) return;
-		//		if (transition.y > 0)
-		//		{
-		//			num = Grid.OffsetCell(num, transition.x, 0);
-		//			if (transition.x > 0) {
-		//				if (MyGrid.IsRightSet(num)) return;
-		//			}
-		//			else
-		//			{
-		//				if (!MyGrid.IsRightSet(num)) return;
-		//			}
-		//		}
-		//		else
-		//		{
-		//			num = Grid.OffsetCell(num, 0, transition.y);
-		//			if (transition.x > 0)
-		//			{
-		//				if (!MyGrid.IsRightSet(num)) return;
-		//			}
-		//			else
-		//			{
-		//				if (MyGrid.IsRightSet(num)) return;
-		//			}
-		//		}
-		//		if (!MyGrid.IsWalkable(num)) return;
-
-		//		transition.isLooping = true;
-		//		transition.anim = "floor_floor_1_0_loop";
-		//		__state = true;
-		//	}
-		//	public static void Postfix(Navigator navigator, ref Navigator.ActiveTransition transition, ref bool __state, ref TransitionDriver __instance)
-		//	{
-		//		if (!__state) return;
-		//		transition.isLooping = false;
-		//		navigator.AddTag(tag_Stairs);
-		//		if (transition.y > 0)
-		//		{
-		//			transition.speed *= 0.9f;
-		//			transition.animSpeed *= 0.9f;
-		//		}
-		//		else if(transition.y < 0)
-		//		{
-		//			transition.speed *= 1.5f;
-		//			transition.animSpeed *= 1.5f;
-		//		}
-		//	}
-		//}
 
 		// 建筑摆放判定
 		[HarmonyPatch(typeof(BuildingDef))]
