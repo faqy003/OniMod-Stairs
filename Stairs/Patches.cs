@@ -2,7 +2,6 @@
 using KMod;
 using STRINGS;
 using System;
-using System.Collections.Generic;
 using UnityEngine;
 using System.IO;
 
@@ -47,17 +46,17 @@ namespace Stairs
 			if ((Masks[cell] & Flags.RightSet) == 0) return false;
 			return true;
 		}
-		public static bool IsBlocked(int cell)
-		{
-			if ((Masks[cell] & Flags.Blocked) == 0) return false;
-			return true;
-		}
+		//public static bool IsBlocked(int cell)
+		//{
+		//	if ((Masks[cell] & Flags.Blocked) == 0) return false;
+		//	return true;
+		//}
 		public enum Flags : byte
 		{
 			HasStair = 1,
 			RightSet = 2,
 			Walkable = 4,
-			Blocked = 8,
+			//Blocked = 8,
 			HasScaffolding = 16,
 		}
 		public static Flags[] Masks;
@@ -111,9 +110,9 @@ namespace Stairs
 		public static string sPath;
 		public static void LoadStrings(string file,bool isTemplate=false)
 		{
-			Debug.Log(file);
 			if (!File.Exists(file)) return;
-            var strings = Localization.LoadStringsFile(file, isTemplate);
+			Debug.Log("[MOD] Stairs : "+file);
+			var strings = Localization.LoadStringsFile(file, isTemplate);
 			foreach (var s in strings)
 			{
 				Strings.Add(s.Key, s.Value);
@@ -208,6 +207,16 @@ namespace Stairs
 				navigator.transitionDriver.overrideLayers.Add(new MyTransitionLayer(navigator));
 			}
 		}
+		[HarmonyPatch(typeof(ScoutRoverConfig))]
+		[HarmonyPatch("OnSpawn")]
+		public static class ScoutRoverConfig_Patch
+		{
+			public static void Postfix(GameObject inst)
+			{
+				Navigator navigator = inst.GetComponent<Navigator>();
+				navigator.transitionDriver.overrideLayers.Add(new MyTransitionLayer(navigator));
+			}
+		}
 
 		//安全感知修正
 		[HarmonyPatch(typeof(SafeCellSensor))]
@@ -274,31 +283,27 @@ namespace Stairs
 			public static void Postfix(ref bool __result, int cell, int anchor_cell, bool is_dupe)
 			{
 				if (__result) return;
-				if (!Grid.IsWorldValidCell(cell))
-				{
+				if (!Grid.IsWorldValidCell(cell))return;
+				if (!is_dupe) return;
+                if (MyGrid.IsScaffolding(cell))
+                {
+					__result = true;
+					return;
+                }
+				if (Grid.IsWorldValidCell(anchor_cell) && MyGrid.IsWalkable(anchor_cell))
+                {
+					__result = true;
 					return;
 				}
-				if (!is_dupe) return; 
-				if (!Grid.IsWorldValidCell(anchor_cell))
-				{
-					return;
-				}
-				if (!MyGrid.IsStair(anchor_cell) && !MyGrid.IsScaffolding(cell)) return;
-				__result = true;
 			}
 		}
 
 		// 寻路限制
 		public static bool PathFilter(ref bool __result, ref PathFinder.PotentialPath path, int from_cell, NavType from_nav_type, Navigator navigator)
 		{
-			int cell = path.cell;
-			if (MyGrid.IsBlocked(cell))
-			{
-				__result = false;
-				return false;
-			}
 			if (path.navType != NavType.Floor || from_nav_type != NavType.Floor) return true;
 
+			int cell = path.cell;
 			int f_b = Grid.CellBelow(from_cell);
 			bool cellNotStair = !MyGrid.IsStair(cell);
 			bool fromStair = MyGrid.IsStair(from_cell);
@@ -424,18 +429,39 @@ namespace Stairs
             }
         }
 
-        //// 扫扫寻路
-        //[HarmonyPatch(typeof(NavGrid))]
-        //[HarmonyPatch(MethodType.Constructor)]
-        //[HarmonyPatch(new Type[] { typeof(string), typeof(NavGrid.Transition[]), typeof(NavGrid.NavTypeData[]), typeof(CellOffset[]), typeof(NavTableValidator[]), typeof(int), typeof(int), typeof(int) })]
-        //public static class NavGrid_Patch
-        //{
-        //	public static void Prefix(string id,ref NavTableValidator[] validators)
-        //	{
-        //		if (id != "WalkerBabyNavGrid") return;
-        //		validators = validators.Append(new ScaffoldingValidator());
-        //	}
-        //}
+  //      // 扫扫寻路
+		//[HarmonyPatch(typeof(SweepStates))]
+		//[HarmonyPatch("GetNextCell")]
+		//public class SweepStates_Patch
+		//{
+		//	public static void Postfix(SweepStates.Instance smi,ref int __result)
+  //          {
+		//		if (__result != Grid.InvalidCell) return;
+		//		int cell = Grid.PosToCell(smi);
+		//		if (!Grid.Solid[Grid.CellBelow(cell)] && !MyGrid.IsScaffolding(cell)) return;
+		//		if (Grid.Solid[cell]) return;
+		//		int distance = 0;
+		//		int next = Grid.InvalidCell;
+		//		while (distance < 1)
+		//		{
+		//			next = (smi.sm.headingRight.Get(smi) ? Grid.CellRight(cell) : Grid.CellLeft(cell));
+		//			if (!Grid.IsValidCell(next) && !Grid.Solid[next] && Grid.IsValidCell(Grid.CellBelow(next)) && (Grid.Solid[Grid.CellBelow(next)] || MyGrid.IsScaffolding(next)))
+		//			{
+		//				break;
+		//			}
+		//			cell = next;
+		//			distance++;
+		//		}
+		//		if (cell == Grid.PosToCell(smi))
+		//		{
+		//			return;
+		//		}
+		//		else
+		//		{
+		//			__result = cell;
+		//		}
+		//	}
+  //      }
 
         // 添加陨石伤害
         [HarmonyPatch(typeof(Comet))]

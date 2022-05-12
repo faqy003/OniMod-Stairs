@@ -13,7 +13,7 @@ namespace Stairs
 		protected override void OnPrefabInit()
 		{
 			base.OnPrefabInit();
-			base.Subscribe<Scaffolding>(493375141, Scaffolding.OnRefreshUserMenuDelegate);
+			base.Subscribe<Scaffolding>((int)GameHashes.RefreshUserMenu, Scaffolding.OnRefreshUserMenuDelegate);
 		}
 		public bool IsEnabled
 		{
@@ -26,7 +26,7 @@ namespace Stairs
 				Game.Instance.userMenu.Refresh(base.gameObject);
 				this.buildingEnabled = value;
 				base.GetComponent<KSelectable>().ToggleStatusItem(Db.Get().BuildingStatusItems.BuildingDisabled, !this.buildingEnabled, null);
-				base.Trigger(1088293757, this.buildingEnabled);
+				base.Trigger((int)GameHashes.PowerStatusChanged, this.buildingEnabled);
 				int cell = Grid.PosToCell(this);
 				if (this.buildingEnabled)
 				{
@@ -57,7 +57,7 @@ namespace Stairs
 		{
 			if (this.IsEnabled)
 			{
-				base.Trigger(2108245096, "BuildingDisabled");
+				base.Trigger((int)GameHashes.WorkChoreDisabled, "BuildingDisabled");
 			}
 			this.IsEnabled = !this.IsEnabled;
 			Game.Instance.userMenu.Refresh(base.gameObject);

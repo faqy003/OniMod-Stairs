@@ -3,8 +3,11 @@
 namespace Stairs
 {
     public class MyTransitionLayer : TransitionDriver.OverrideLayer
-    {
-        public MyTransitionLayer(Navigator navigator) : base(navigator)
+	{
+		public static readonly float cos45 = 0.7071f;
+		public static readonly float upwardsMovementSpeedMultiplier = 0.9f;
+		public static readonly float downwardsMovementSpeedMultiplier = 1.5f;
+		public MyTransitionLayer(Navigator navigator) : base(navigator)
         {
 			isMovingOnStaris = false;
         }
@@ -45,13 +48,13 @@ namespace Stairs
 
 			if (transition.y > 0)
 			{
-				transition.speed *= 0.9f * cos45;
-				transition.animSpeed *= 0.9f * cos45;
+				transition.speed *= upwardsMovementSpeedMultiplier * cos45;
+				transition.animSpeed *= upwardsMovementSpeedMultiplier * cos45;
 			}
 			else
 			{
-				transition.speed *= 1.5f * cos45;
-				transition.animSpeed *= 1.5f * cos45;
+				transition.speed *= downwardsMovementSpeedMultiplier * cos45;
+				transition.animSpeed *= downwardsMovementSpeedMultiplier * cos45;
 			}
 
 			transition.isLooping = true;
@@ -113,6 +116,5 @@ namespace Stairs
 		private float time;
 		private Vector3 startPos;
 		private Vector3 targetPos;
-		public static readonly float cos45 = 0.7071f;
 	}
 }
