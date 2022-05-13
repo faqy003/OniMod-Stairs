@@ -40,32 +40,17 @@ namespace Stairs
 
 			return buildingDef;
 		}
-	}
-	public class ScaffoldingConfig : IBuildingConfig
-	{
-		public const string ID = "urfScaffolding";
-		public override BuildingDef CreateBuildingDef()
-		{
+		public static BuildingDef CreateScaffoldingDef(string id, string anim, float[] construction_mass, string[] construction_materials)
+        {
 			int width = 1;
 			int height = 1;
-			string anim = "scaffolding_kanim";
 			int hitpoints = 5;
-			float construction_time = 2f;
-
-			//耗费材料
-			float[] construction_mass = new float[]
-			{
-				BUILDINGS.CONSTRUCTION_MASS_KG.TIER2[0],
-			};
-			string[] construction_materials = new string[]
-			{
-				"Metal",
-			};
+			float construction_time = 10f;
 
 			float melting_point = BUILDINGS.MELTING_POINT_KELVIN.TIER2;
 			BuildLocationRule build_location_rule = BuildLocationRule.NotInTiles;
 			EffectorValues none = NOISE_POLLUTION.NONE;
-			BuildingDef buildingDef = BuildingTemplates.CreateBuildingDef(ID, width, height, anim, hitpoints, construction_time, construction_mass, construction_materials, melting_point, build_location_rule, BUILDINGS.DECOR.BONUS.TIER0, none, 1f);
+			BuildingDef buildingDef = BuildingTemplates.CreateBuildingDef(id, width, height, anim, hitpoints, construction_time, construction_mass, construction_materials, melting_point, build_location_rule, BUILDINGS.DECOR.BONUS.TIER0, none, 1f);
 			buildingDef.Floodable = false;
 			buildingDef.Entombable = false;
 			buildingDef.Overheatable = false;
@@ -80,6 +65,27 @@ namespace Stairs
 
 			return buildingDef;
 		}
+	}
+	public class ScaffoldingConfig : IBuildingConfig
+	{
+		public const string ID = "urfScaffolding";
+		public override BuildingDef CreateBuildingDef()
+		{
+			//耗费材料
+			float[] construction_mass = new float[]
+			{
+				BUILDINGS.CONSTRUCTION_MASS_KG.TIER2[0],
+			};
+			string[] construction_materials = new string[]
+			{
+				"Metal",
+			};
+
+			var buildingDef = BuidingTemplates.CreateScaffoldingDef(ID, "scaffolding_kanim", construction_mass, construction_materials);
+			buildingDef.ConstructionTime = 2f;
+
+			return buildingDef;
+		}
 
 		public override void ConfigureBuildingTemplate(GameObject go, Tag prefab_tag)
 		{
@@ -87,6 +93,7 @@ namespace Stairs
 			BuildingConfigManager.Instance.IgnoreDefaultKComponent(typeof(RequiresFoundation), prefab_tag);
 			go.AddOrGet<AnimTileable>().objectLayer = ObjectLayer.AttachableBuilding;
 			//go.AddOrGet<BuildingHP>().destroyOnDamaged = true;
+			go.AddTag(Patches.tag_Scaffolding);
 		}
 
 		public override void DoPostConfigureComplete(GameObject go)
@@ -102,7 +109,7 @@ namespace Stairs
 	}
 	public class StairsConfig : IBuildingConfig
     {
-		public static string ID = "Stairs";
+		public const string ID = "Stairs";
 		public override BuildingDef CreateBuildingDef()
 		{
 			//耗费材料
@@ -140,7 +147,7 @@ namespace Stairs
 	}
 	public class StairsAlt1Config : IBuildingConfig
 	{
-		public static string ID = "Stairs_Alt1";
+		public const string ID = "Stairs_Alt1";
 		public override BuildingDef CreateBuildingDef()
 		{
 			//耗费材料
@@ -157,6 +164,7 @@ namespace Stairs
 			var buildingDef = BuidingTemplates.CreateStairsDef(ID, "stairs_alt1_kanim", construction_mass, construction_materials);
 			buildingDef.BaseDecor = 8f;
 			buildingDef.BaseDecorRadius = 2f;
+			buildingDef.AudioCategory = "Glass";
 
 			return buildingDef;
 		}

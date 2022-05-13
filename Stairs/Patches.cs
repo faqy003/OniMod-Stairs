@@ -61,51 +61,10 @@ namespace Stairs
 		}
 		public static Flags[] Masks;
 	}
-	public class ScaffoldingValidator : NavTableValidator
-	{
-		public ScaffoldingValidator()
-		{
-			World instance = World.Instance;
-			instance.OnSolidChanged = (Action<int>)Delegate.Combine(instance.OnSolidChanged, new Action<int>(this.OnSolidChanged));
-		}
-		private void OnSolidChanged(int cell)
-		{
-			if (this.onDirty != null)
-			{
-				this.onDirty.Invoke(cell);
-			}
-		}
-		public override void Clear()
-		{
-			World instance = World.Instance;
-			instance.OnSolidChanged = (Action<int>)Delegate.Remove(instance.OnSolidChanged, new Action<int>(this.OnSolidChanged));
-		}
-		public override void UpdateCell(int cell, NavTable nav_table, CellOffset[] bounding_offsets)
-		{
-			bool flag = ScaffoldingValidator.IsWalkableCell(cell);
-			if(flag && base.IsClear(cell, bounding_offsets, false))
-				nav_table.SetValid(cell, NavType.Floor, true);
-		}
-
-		private static bool IsWalkableCell(int cell)
-		{
-			if (Grid.IsValidCell(cell))
-			{
-				if (!NavTableValidator.IsCellPassable(cell, false))
-				{
-					return false;
-				}
-				else if (MyGrid.IsScaffolding(cell))
-				{
-					return true;
-				}
-			}
-			return false;
-		}
-	}
 	public class Patches : KMod.UserMod2
 	{
 		public static readonly Tag tag_Stairs = TagManager.Create("Stairs");
+		public static readonly Tag tag_Scaffolding = TagManager.Create("Scaffolding");
 		public static bool ChainedDeconstruction = false;
 		public static string sPath;
 		public static void LoadStrings(string file,bool isTemplate=false)
@@ -238,25 +197,24 @@ namespace Stairs
 		[HarmonyPatch("IsAreaClear")]
 		public static class BuildingDef_IsAreaClear_Patch
 		{
-			public static void Prefix(BuildingDef __instance, ref bool __state, GameObject source_go, int cell, Orientation orientation,ref ObjectLayer layer, ObjectLayer tile_layer, bool replace_tile, ref string fail_reason)
+			public static bool IsScaffolding(GameObject go)
+            {
+				if (go == null) return false;
+				if (go.HasTag(tag_Scaffolding)) return false;
+				return true;
+            }
+			public static void Postfix(BuildingDef __instance, ref bool __result, GameObject source_go, int cell, Orientation orientation, ObjectLayer layer, ObjectLayer tile_layer, bool replace_tile, ref string fail_reason)
 			{
-				__state = __instance.name == "urfScaffolding";
-				//if (__state)
-				//{
-				//	layer = ObjectLayer.AttachableBuilding;
-				//}
-			}
-			public static void Postfix(BuildingDef __instance, ref bool __state, ref bool __result, GameObject source_go, int cell, Orientation orientation, ObjectLayer layer, ObjectLayer tile_layer, bool replace_tile, ref string fail_reason)
-			{
-				if ((layer == ObjectLayer.Gantry || __instance.BuildLocationRule == BuildLocationRule.Tile || __instance.BuildLocationRule == BuildLocationRule.HighWattBridgeTile) 
-					&& __result)
+				if (!__result) return;
+				if (layer == ObjectLayer.Gantry || __instance.BuildLocationRule == BuildLocationRule.Tile || __instance.BuildLocationRule == BuildLocationRule.HighWattBridgeTile)
 				{
 					for (int i = 0; i < __instance.PlacementOffsets.Length; i++)
 					{
 						CellOffset offset = __instance.PlacementOffsets[i];
 						CellOffset rotatedCellOffset = Rotatable.GetRotatedCellOffset(offset, orientation);
-						int num = Grid.OffsetCell(cell, rotatedCellOffset);
-						if (MyGrid.IsScaffolding(num))
+						int offset_cell = Grid.OffsetCell(cell, rotatedCellOffset);
+						GameObject go = Grid.Objects[offset_cell, (int)ObjectLayer.AttachableBuilding];
+						if (IsScaffolding(go))
 						{
 							__result = false;
 							break;
@@ -265,11 +223,8 @@ namespace Stairs
 				}
 				else
 				{
-					if (!__state) return;
-					if (__result)
-					{
-						if (Grid.Objects[cell, (int)ObjectLayer.Gantry] != null) __result = false;
-					}
+					if (!IsScaffolding(source_go)) return;
+					if (Grid.Objects[cell, (int)ObjectLayer.Gantry] != null) __result = false;
 				}
 				if(!__result) fail_reason = UI.TOOLTIPS.HELP_BUILDLOCATION_OCCUPIED;
 			}

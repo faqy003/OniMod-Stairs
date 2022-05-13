@@ -4,12 +4,13 @@ namespace Stairs
 {
     public class MyTransitionLayer : TransitionDriver.OverrideLayer
 	{
-		public static readonly float cos45 = 0.7071f;
-		public static readonly float upwardsMovementSpeedMultiplier = 0.9f;
-		public static readonly float downwardsMovementSpeedMultiplier = 1.5f;
+		public const float cos45 = 0.7071f;
+		public const float upwardsMovementSpeedMultiplier = 0.9f;
+		public const float downwardsMovementSpeedMultiplier = 1.5f;
 		public MyTransitionLayer(Navigator navigator) : base(navigator)
         {
 			isMovingOnStaris = false;
+			time = Time.time;
         }
         public override void BeginTransition(Navigator navigator, Navigator.ActiveTransition transition)
         {
@@ -60,7 +61,7 @@ namespace Stairs
 			transition.isLooping = true;
 			transition.anim = "floor_floor_1_0_loop";
 			isMovingOnStaris =true;
-			time = Time.timeSinceLevelLoad;
+			time = Time.time;
 			int target_cell = Grid.OffsetCell(cell, transition.x, transition.y);
 			targetPos = Grid.CellToPosCBC(target_cell, navigator.sceneLayer);
 			startPos = navigator.transform.GetPosition();
@@ -71,8 +72,8 @@ namespace Stairs
 			if (!isMovingOnStaris) return;
 			transition.isLooping = false;
 			Vector3 pos = navigator.transform.GetPosition();
-			float step = (Time.timeSinceLevelLoad - time) * transition.speed;
-			time = Time.timeSinceLevelLoad;
+			float step = (Time.time - time) * transition.speed;
+			time = Time.time;
 
 			if (transition.y > 0)
 			{

@@ -41,9 +41,8 @@ namespace Stairs
 		}
 		private void OnRefreshUserMenu(object data)
 		{
-			bool isEnabled = this.IsEnabled;
 			KIconButtonMenu.ButtonInfo button;
-			if (isEnabled)
+			if (this.IsEnabled)
 			{
 				button = new KIconButtonMenu.ButtonInfo("action_building_disabled", UI.USERMENUACTIONS.ENABLEBUILDING.NAME, new System.Action(this.OnMenuToggle), Action.ToggleEnabled, null, null, null, UI.USERMENUACTIONS.ENABLEBUILDING.TOOLTIP, true);
 			}
@@ -66,10 +65,7 @@ namespace Stairs
 		{
 			base.OnSpawn();
 			base.GetComponent<KSelectable>().SetStatusItem(Db.Get().StatusItemCategories.Main, Db.Get().BuildingStatusItems.Normal, null);
-			int cell = Grid.PosToCell(this);
 			this.IsEnabled = this.buildingEnabled;
-			//MyGrid.Masks[cell] |= MyGrid.Flags.HasScaffolding;
-			//Pathfinding.Instance.AddDirtyNavGridCell(cell);
 		}
 
 		protected override void OnCleanUp()
