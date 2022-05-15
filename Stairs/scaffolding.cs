@@ -10,12 +10,12 @@ namespace Stairs
 {
 	class Scaffolding : KMonoBehaviour
 	{
-		protected override void OnPrefabInit()
-		{
-			base.OnPrefabInit();
+        protected override void OnPrefabInit()
+        {
+            base.OnPrefabInit();
 			base.Subscribe<Scaffolding>((int)GameHashes.RefreshUserMenu, Scaffolding.OnRefreshUserMenuDelegate);
-		}
-		public bool IsEnabled
+        }
+        public bool IsEnabled
 		{
 			get
 			{
@@ -23,21 +23,25 @@ namespace Stairs
 			}
 			set
 			{
-				Game.Instance.userMenu.Refresh(base.gameObject);
 				this.buildingEnabled = value;
-				base.GetComponent<KSelectable>().ToggleStatusItem(Db.Get().BuildingStatusItems.BuildingDisabled, !this.buildingEnabled, null);
+				Game.Instance.userMenu.Refresh(base.gameObject);
 				base.Trigger((int)GameHashes.PowerStatusChanged, this.buildingEnabled);
-				int cell = Grid.PosToCell(this);
-				if (this.buildingEnabled)
-				{
-					MyGrid.Masks[cell] |= MyGrid.Flags.HasScaffolding;
-				}
-				else
-				{
-					MyGrid.Masks[cell] &= ~MyGrid.Flags.HasScaffolding;
-				}
-				Pathfinding.Instance.AddDirtyNavGridCell(cell);
+				UpdateState();
 			}
+		}
+		private void UpdateState()
+		{
+			int cell = Grid.PosToCell(this);
+			base.GetComponent<KSelectable>().ToggleStatusItem(Db.Get().BuildingStatusItems.BuildingDisabled, !this.IsEnabled, null); //图标
+			if (this.IsEnabled && !this.GetComponent<BuildingHP>().IsBroken)
+			{
+				MyGrid.Masks[cell] |= MyGrid.Flags.HasScaffolding;
+			}
+			else
+			{
+				MyGrid.Masks[cell] &= ~MyGrid.Flags.HasScaffolding;
+			}
+			Pathfinding.Instance.AddDirtyNavGridCell(cell);
 		}
 		private void OnRefreshUserMenu(object data)
 		{
@@ -54,26 +58,25 @@ namespace Stairs
 		}
 		private void OnMenuToggle()
 		{
-			if (this.IsEnabled)
-			{
-				base.Trigger((int)GameHashes.WorkChoreDisabled, "BuildingDisabled");
-			}
-			this.IsEnabled = !this.IsEnabled;
-			Game.Instance.userMenu.Refresh(base.gameObject);
+            this.IsEnabled = !this.IsEnabled;
 		}
 		protected override void OnSpawn()
 		{
 			base.OnSpawn();
 			base.GetComponent<KSelectable>().SetStatusItem(Db.Get().StatusItemCategories.Main, Db.Get().BuildingStatusItems.Normal, null);
 			this.IsEnabled = this.buildingEnabled;
+			base.Subscribe<Scaffolding>((int)GameHashes.BuildingBroken, Scaffolding.OnBuildingBrokenDelegate);
+			base.Subscribe<Scaffolding>((int)GameHashes.BuildingFullyRepaired, Scaffolding.OnBuildingFullyRepairedDelegate);
 		}
-
 		protected override void OnCleanUp()
 		{
+			base.Unsubscribe<Scaffolding>((int)GameHashes.BuildingBroken, Scaffolding.OnBuildingBrokenDelegate, false);
+			base.Unsubscribe<Scaffolding>((int)GameHashes.BuildingFullyRepaired, Scaffolding.OnBuildingFullyRepairedDelegate, false);
 			base.OnCleanUp();
 			int cell = Grid.PosToCell(this);
 			MyGrid.Masks[cell] &= ~MyGrid.Flags.HasScaffolding;
 			Pathfinding.Instance.AddDirtyNavGridCell(cell);
+			//连环拆除
 			if (Patches.ChainedDeconstruction)
 			{
 				Deconstructable deconstructable = base.GetComponent<Deconstructable>();
@@ -84,14 +87,32 @@ namespace Stairs
 				}
 			}
 		}
+		private void OnBuildingBroken(object data)
+		{
+			UpdateState();
+		}
+		private void OnBuildingFullyRepaired(object data)
+		{
+			UpdateState();
+		}
 
-		[Serialize]
-		private bool buildingEnabled = true;
+		private static readonly EventSystem.IntraObjectHandler<Scaffolding> OnBuildingBrokenDelegate = new EventSystem.IntraObjectHandler<Scaffolding>(delegate (Scaffolding component, object data)
+		{
+			component.OnBuildingBroken(data);
+		});
+
+		private static readonly EventSystem.IntraObjectHandler<Scaffolding> OnBuildingFullyRepairedDelegate = new EventSystem.IntraObjectHandler<Scaffolding>(delegate (Scaffolding component, object data)
+		{
+			component.OnBuildingFullyRepaired(data);
+		});
 
 		private static readonly EventSystem.IntraObjectHandler<Scaffolding> OnRefreshUserMenuDelegate = new EventSystem.IntraObjectHandler<Scaffolding>(delegate (Scaffolding component, object data)
 		{
 			component.OnRefreshUserMenu(data);
 		});
+
+		[Serialize]
+		private bool buildingEnabled = true;
 	}
 
 }

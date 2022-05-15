@@ -47,7 +47,7 @@ namespace Stairs
 			{
 				rotatedCellOffset = component.GetRotatedCellOffset(rotatedCellOffset);
 			}
-			int cell_forward = Grid.OffsetCell(cell, rotatedCellOffset);
+			int cell_front = Grid.OffsetCell(cell, rotatedCellOffset);
 			int cell_above = Grid.CellAbove(cell);
 			if (Grid.IsValidCell(cell_above))
 			{
@@ -55,9 +55,9 @@ namespace Stairs
 			}
 			if (!is_blocked_above)
 			{
-				if (Grid.IsValidCell(cell_forward))
+				if (Grid.IsValidCell(cell_front))
 				{
-					is_visible = !this.HasTileableNeighbour(cell_forward);
+					is_visible = !this.HasTileableNeighbour(cell_front);
 				}
 			}
 			else
@@ -95,8 +95,7 @@ namespace Stairs
 			{
 				SimCellOccupier simCell = gameObject.GetComponent<SimCellOccupier>();
 				if (simCell != null) return true;
-				KPrefabID component = gameObject.GetComponent<KPrefabID>();
-				if (component != null && component.HasTag(Patches.tag_Stairs)) return true;
+				if (gameObject.HasTag(Patches.tag_Stairs)) return true;
 			}
 			return false;
 		}
@@ -134,7 +133,7 @@ namespace Stairs
 		protected override void OnPrefabInit()
 		{
 			base.OnPrefabInit();
-			base.GetComponent<KPrefabID>().AddTag(Patches.tag_Stairs, false);
+			//base.GetComponent<KPrefabID>().AddTag(Patches.tag_Stairs, false);
 		}
 
 		protected override void OnSpawn()

@@ -13,14 +13,13 @@ namespace Stairs
 		{
 			if (!Grid.IsValidCell(cell)) return;
 			if (isStairs) { if (!MyGrid.IsStair(cell)) return; }
-			else if (!MyGrid.IsScaffolding(cell)) return;
+			//else if (!MyGrid.IsScaffolding(cell)) return;
 
-			int layer = (int)ObjectLayer.Building;
-			if (!isStairs) layer = (int)ObjectLayer.AttachableBuilding;
+			int layer = isStairs ? (int)ObjectLayer.Building: (int)ObjectLayer.AttachableBuilding;
 			GameObject gameObject = Grid.Objects[cell, layer];
 			if (gameObject == null) return;
 
-			//if (!isStairs && gameObject.GetComponent<Scaffolding>() == null) return;
+			if (!isStairs && gameObject.GetComponent<Scaffolding>() == null) return;
 			Deconstructable deconstructable = gameObject.GetComponent<Deconstructable>();
 			if (deconstructable == null) return;
 			if (!deconstructable.IsMarkedForDeconstruction()) return;
@@ -70,12 +69,12 @@ namespace Stairs
 		public static void LoadStrings(string file,bool isTemplate=false)
 		{
 			if (!File.Exists(file)) return;
-			Debug.Log("[MOD] Stairs : "+file);
 			var strings = Localization.LoadStringsFile(file, isTemplate);
 			foreach (var s in strings)
 			{
 				Strings.Add(s.Key, s.Value);
 			}
+			Debug.Log("[MOD][Stairs] Locfile loaded : "+file);
         }
 
 		public override void OnLoad(Harmony harmony)
@@ -109,7 +108,7 @@ namespace Stairs
 					if (mod.title == "ChainedDeconstruction")
 					{
 						ChainedDeconstruction = true;
-						Debug.Log("[MOD] Stairs : ChainedDeconstruction Enable");
+						Debug.Log("[MOD][Stairs] ChainedDeconstruction Enable");
 						break;
 					}
 				}
@@ -225,6 +224,12 @@ namespace Stairs
 				{
 					if (!IsScaffolding(source_go)) return;
 					if (Grid.Objects[cell, (int)ObjectLayer.Gantry] != null) __result = false;
+					//else if(Grid.Objects[cell, (int)ObjectLayer.Building] != null)
+					//{
+					//	GameObject go = Grid.Objects[cell, (int)ObjectLayer.Building];
+					//	var makeBaseSolid = go.GetComponent<MakeBaseSolid>();
+					//	if (makeBaseSolid != null) __result = false;
+					//}
 				}
 				if(!__result) fail_reason = UI.TOOLTIPS.HELP_BUILDLOCATION_OCCUPIED;
 			}
@@ -423,27 +428,61 @@ namespace Stairs
 		[HarmonyPatch("DamageThings")]
 		public static class Comet_Patch
 		{
-			public static void Prefix(Comet __instance,Vector3 pos, int cell, int damage)
+			public static void Prefix(Vector3 pos, int cell, int damage)
 			{
 				if (!Grid.IsValidCell(cell))
 					return;
-				if (!MyGrid.IsScaffolding(cell)) 
-					return;
-
-				GameObject gameObject = Grid.Objects[cell, (int)ObjectLayer.AttachableBuilding];
-				if (gameObject != null)
+				DoDamage2Scaffolding(cell, Mathf.RoundToInt(damage), BUILDINGS.DAMAGESOURCES.COMET, UI.GAMEOBJECTEFFECTS.DAMAGE_POPS.COMET);
+			}
+		}
+		public static void DoDamage2Scaffolding(int cell,int damage,string source,string popString)
+        {
+			GameObject gameObject = Grid.Objects[cell, (int)ObjectLayer.AttachableBuilding];
+			if (gameObject != null)
+			{
+				if (!gameObject.HasTag(tag_Scaffolding)) return;
+				BuildingHP component = gameObject.GetComponent<BuildingHP>();
+				if (component != null)
 				{
-					BuildingHP component = gameObject.GetComponent<BuildingHP>();
-					if (component != null )
+					if (damage < 0) damage = component.MaxHitPoints;
+					component.gameObject.Trigger((int)GameHashes.DoBuildingDamage, new BuildingHP.DamageSourceInfo
 					{
-						float f = gameObject.GetComponent<KPrefabID>().HasTag(GameTags.Bunker) ? ((float)damage * __instance.bunkerDamageMultiplier) : ((float)damage);
-						component.gameObject.Trigger((int)GameHashes.DoBuildingDamage, new BuildingHP.DamageSourceInfo
-						{
-							damage = Mathf.RoundToInt(f),
-							source = BUILDINGS.DAMAGESOURCES.COMET,
-							popString = UI.GAMEOBJECTEFFECTS.DAMAGE_POPS.COMET
-						});
-					}
+						damage = damage,
+						source = source,
+						popString = popString
+					});
+				}
+			}
+		}
+
+		//添加火箭伤害
+		[HarmonyPatch(typeof(LaunchableRocket.States))]
+		[HarmonyPatch("DoWorldDamage")]
+		public static class LaunchableRocket_Patch
+        {
+			public static void Postfix(GameObject part, Vector3 apparentPosition)
+			{
+				OccupyArea area = part.GetComponent<OccupyArea>();
+				foreach (CellOffset cellOffset in area.OccupiedCellsOffsets)
+                {
+					int cell = Grid.OffsetCell(Grid.PosToCell(apparentPosition), cellOffset);
+					if (!Grid.IsValidCell(cell)) continue;
+					DoDamage2Scaffolding(cell, -1, BUILDINGS.DAMAGESOURCES.ROCKET, UI.GAMEOBJECTEFFECTS.DAMAGE_POPS.ROCKET);
+				}
+			}
+		}
+		[HarmonyPatch(typeof(LaunchableRocketCluster.States))]
+		[HarmonyPatch("DoWorldDamage")]
+		public class LaunchableRocketCluster_Patch
+		{
+			public static void Postfix(GameObject part, Vector3 apparentPosition, int actualWorld)
+			{
+				OccupyArea area = part.GetComponent<OccupyArea>();
+				foreach (CellOffset cellOffset in area.OccupiedCellsOffsets)
+				{
+					int cell = Grid.OffsetCell(Grid.PosToCell(apparentPosition), cellOffset);
+					if (!Grid.IsValidCell(cell) || Grid.WorldIdx[cell] != Grid.WorldIdx[actualWorld]) continue;
+					DoDamage2Scaffolding(cell, -1, BUILDINGS.DAMAGESOURCES.ROCKET, UI.GAMEOBJECTEFFECTS.DAMAGE_POPS.ROCKET);
 				}
 			}
 		}
@@ -456,12 +495,11 @@ namespace Stairs
 			public static void Postfix(DeconstructTool __instance, int cell)
 			{
 				if (!((FilteredDragTool)__instance).IsActiveLayer(ToolParameterMenu.FILTERLAYERS.BACKWALL)) return;
-				if (!MyGrid.IsScaffolding(cell)) return;
 
 				GameObject gameObject = Grid.Objects[cell, (int)ObjectLayer.AttachableBuilding];
-				if (gameObject != null)
+				if (gameObject != null && gameObject.GetComponent<Scaffolding>() != null)
 				{
-					gameObject.Trigger(-790448070, null);
+					gameObject.Trigger((int)GameHashes.MarkForDeconstruct, null);
 					Prioritizable component = gameObject.GetComponent<Prioritizable>();
 					if (component != null)
 					{

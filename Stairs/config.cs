@@ -92,7 +92,6 @@ namespace Stairs
 			GeneratedBuildings.MakeBuildingAlwaysOperational(go);
 			BuildingConfigManager.Instance.IgnoreDefaultKComponent(typeof(RequiresFoundation), prefab_tag);
 			go.AddOrGet<AnimTileable>().objectLayer = ObjectLayer.AttachableBuilding;
-			//go.AddOrGet<BuildingHP>().destroyOnDamaged = true;
 			go.AddTag(Patches.tag_Scaffolding);
 		}
 
@@ -107,6 +106,7 @@ namespace Stairs
 			base.DoPostConfigureUnderConstruction(go);
 		}
 	}
+
 	public class StairsConfig : IBuildingConfig
     {
 		public const string ID = "Stairs";
@@ -134,6 +134,7 @@ namespace Stairs
 			GeneratedBuildings.MakeBuildingAlwaysOperational(go);
 			go.AddOrGet<Stair>();
 			go.AddOrGet<AnimStairs>();
+			go.AddTag(Patches.tag_Stairs);
 		}
 
 		public override void DoPostConfigureComplete(GameObject go)
@@ -174,6 +175,7 @@ namespace Stairs
 			GeneratedBuildings.MakeBuildingAlwaysOperational(go);
 			go.AddOrGet<Stair>();
 			go.AddOrGet<AnimStairs>();
+			go.AddTag(Patches.tag_Stairs);
 		}
 
 		public override void DoPostConfigureComplete(GameObject go)
