@@ -63,6 +63,11 @@ namespace Stairs
 			buildingDef.ObjectLayer = ObjectLayer.AttachableBuilding;
 			buildingDef.SceneLayer = Grid.SceneLayer.TileMain;
 
+			buildingDef.ReplacementLayer = ObjectLayer.ReplacementTile;
+			buildingDef.ReplacementCandidateLayers = new List<ObjectLayer>{ ObjectLayer.AttachableBuilding};
+			List<Tag> list = new List<Tag>{ Patches.tag_Scaffolding };
+			buildingDef.ReplacementTags = list;
+
 			return buildingDef;
 		}
 	}
@@ -78,7 +83,7 @@ namespace Stairs
 			};
 			string[] construction_materials = new string[]
 			{
-				"Metal",
+				MATERIALS.METAL,
 			};
 
 			var buildingDef = BuidingTemplates.CreateScaffoldingDef(ID, "scaffolding_kanim", construction_mass, construction_materials);
@@ -98,7 +103,7 @@ namespace Stairs
 		public override void DoPostConfigureComplete(GameObject go)
 		{
 			go.AddOrGet<Scaffolding>();
-			GeneratedBuildings.RemoveLoopingSounds(go);
+			//GeneratedBuildings.RemoveLoopingSounds(go);
 		}
 		public override void DoPostConfigureUnderConstruction(GameObject go)
 		{
@@ -106,7 +111,83 @@ namespace Stairs
 			base.DoPostConfigureUnderConstruction(go);
 		}
 	}
+	public class ScaffoldingAlt1Config : IBuildingConfig
+	{
+		public const string ID = "urfScaffolding_Alt1";
+		public override BuildingDef CreateBuildingDef()
+		{
+			//耗费材料
+			float[] construction_mass = new float[]
+			{
+				BUILDINGS.CONSTRUCTION_MASS_KG.TIER2[0],
+			};
+			string[] construction_materials = new string[]
+			{
+				MATERIALS.BUILDABLERAW,
+			};
 
+			var buildingDef = BuidingTemplates.CreateScaffoldingDef(ID, "scaffolding_alt1_kanim", construction_mass, construction_materials);
+			buildingDef.BaseDecor = 0f;
+
+			return buildingDef;
+		}
+		public override void ConfigureBuildingTemplate(GameObject go, Tag prefab_tag)
+		{
+			GeneratedBuildings.MakeBuildingAlwaysOperational(go);
+			BuildingConfigManager.Instance.IgnoreDefaultKComponent(typeof(RequiresFoundation), prefab_tag);
+			go.AddOrGet<AnimTileable>().objectLayer = ObjectLayer.AttachableBuilding;
+			go.AddTag(Patches.tag_Scaffolding);
+		}
+		public override void DoPostConfigureComplete(GameObject go)
+		{
+			go.AddOrGet<Scaffolding>();
+			//GeneratedBuildings.RemoveLoopingSounds(go);
+		}
+		public override void DoPostConfigureUnderConstruction(GameObject go)
+		{
+			go.AddOrGet<AnimTileable>().objectLayer = ObjectLayer.AttachableBuilding;
+			base.DoPostConfigureUnderConstruction(go);
+		}
+	}
+	public class ScaffoldingAlt2Config : IBuildingConfig
+	{
+		public const string ID = "urfScaffolding_Alt2";
+		public override BuildingDef CreateBuildingDef()
+		{
+			//耗费材料
+			float[] construction_mass = new float[]
+			{
+				BUILDINGS.CONSTRUCTION_MASS_KG.TIER2[0],
+			};
+			string[] construction_materials = new string[]
+			{
+				MATERIALS.REFINED_METAL,
+			};
+
+			var buildingDef = BuidingTemplates.CreateScaffoldingDef(ID, "scaffolding_alt2_kanim", construction_mass, construction_materials);
+			buildingDef.HitPoints = 50;
+			buildingDef.ConstructionTime = 20f;
+
+			return buildingDef;
+		}
+		public override void ConfigureBuildingTemplate(GameObject go, Tag prefab_tag)
+		{
+			GeneratedBuildings.MakeBuildingAlwaysOperational(go);
+			BuildingConfigManager.Instance.IgnoreDefaultKComponent(typeof(RequiresFoundation), prefab_tag);
+			go.AddOrGet<AnimTileable>().objectLayer = ObjectLayer.AttachableBuilding;
+			go.AddTag(Patches.tag_Scaffolding);
+		}
+		public override void DoPostConfigureComplete(GameObject go)
+		{
+			go.AddOrGet<Scaffolding>();
+			//GeneratedBuildings.RemoveLoopingSounds(go);
+		}
+		public override void DoPostConfigureUnderConstruction(GameObject go)
+		{
+			go.AddOrGet<AnimTileable>().objectLayer = ObjectLayer.AttachableBuilding;
+			base.DoPostConfigureUnderConstruction(go);
+		}
+	}
 	public class StairsConfig : IBuildingConfig
     {
 		public const string ID = "Stairs";
@@ -120,8 +201,8 @@ namespace Stairs
 			};
 			string[] construction_materials = new string[]
 			{
-				"BuildableRaw",
-				"Metal"
+				MATERIALS.BUILDABLERAW,
+				MATERIALS.METAL
 			};
 
 			var buildingDef = BuidingTemplates.CreateStairsDef(ID, "stairs_kanim",construction_mass,construction_materials);

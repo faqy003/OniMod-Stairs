@@ -67,6 +67,11 @@ namespace Stairs
 			this.IsEnabled = this.buildingEnabled;
 			base.Subscribe<Scaffolding>((int)GameHashes.BuildingBroken, Scaffolding.OnBuildingBrokenDelegate);
 			base.Subscribe<Scaffolding>((int)GameHashes.BuildingFullyRepaired, Scaffolding.OnBuildingFullyRepairedDelegate);
+			PrimaryElement primary_element = base.GetComponent<PrimaryElement>();
+			if(primary_element.ElementID == SimHashes.Steel && this.PrefabID() == Patches.tag_ScaffoldingAlt2)
+            {
+				base.GetComponent<BuildingHP>().invincible = true;
+            }
 		}
 		protected override void OnCleanUp()
 		{

@@ -64,6 +64,7 @@ namespace Stairs
 	{
 		public static readonly Tag tag_Stairs = TagManager.Create("Stairs");
 		public static readonly Tag tag_Scaffolding = TagManager.Create("Scaffolding");
+		public static readonly Tag tag_ScaffoldingAlt2 = TagManager.Create(ScaffoldingAlt2Config.ID);
 		public static bool ChainedDeconstruction = false;
 		public static string sPath;
 		public static void LoadStrings(string file,bool isTemplate=false)
@@ -131,8 +132,10 @@ namespace Stairs
 		{
 			public static void Postfix()
 			{
-				ModUtil.AddBuildingToPlanScreen("Base", StairsConfig.ID, "ladders", "FirePole");
-				ModUtil.AddBuildingToPlanScreen("Base", ScaffoldingConfig.ID, "ladders", StairsConfig.ID);
+				ModUtil.AddBuildingToPlanScreen("Base", StairsConfig.ID, "ladders", FirePoleConfig.ID);
+				ModUtil.AddBuildingToPlanScreen("Base", ScaffoldingAlt1Config.ID, "ladders", StairsConfig.ID); ;
+				ModUtil.AddBuildingToPlanScreen("Base", ScaffoldingConfig.ID, "ladders", ScaffoldingAlt1Config.ID);
+				ModUtil.AddBuildingToPlanScreen("Base", ScaffoldingAlt2Config.ID, "ladders", ScaffoldingConfig.ID);
 				ModUtil.AddBuildingToPlanScreen("Base", StairsAlt1Config.ID, "ladders", ScaffoldingConfig.ID);
 			}
 		}
@@ -150,6 +153,8 @@ namespace Stairs
 			{
 				AddBuildingToTechnology(__instance,"Luxury",StairsAlt1Config.ID);
 				AddBuildingToTechnology(__instance,"RefinedObjects",ScaffoldingConfig.ID);
+				AddBuildingToTechnology(__instance, "Smelting", ScaffoldingAlt2Config.ID);
+				AddBuildingToTechnology(__instance, "InteriorDecor", ScaffoldingAlt1Config.ID);
 			}
 		}
 
