@@ -44,17 +44,17 @@ namespace Stairs
             if ((Masks[cell] & Flags.RightSet) == 0) return false;
             return true;
         }
-        //public static bool IsBlocked(int cell)
-        //{
-        //	if ((Masks[cell] & Flags.Blocked) == 0) return false;
-        //	return true;
-        //}
+        public static bool IsHypotenuse(int cell)
+        {
+            if ((Masks[cell] & Flags.Hypotenuse) == 0) return false;
+            return true;
+        }
         public enum Flags : byte
         {
             HasStair = 1,
             RightSet = 2,
             Walkable = 4,
-            //Blocked = 8,
+            Hypotenuse = 8,
             HasScaffolding = 16,
         }
         public static Flags[] Masks;
@@ -264,114 +264,153 @@ namespace Stairs
             }
         }
 
+        //[HarmonyPatch(typeof(PathFinder.PotentialList))]
+        //[HarmonyPatch("Add")]
+        //public static class PathFinder_Patch
+        //{
+        //    public static void Prefix(ref int cost, PathFinder.PotentialPath path)
+        //    {
+        //        if (MyGrid.IsWalkable(path.cell))
+        //        {
+        //            cost -= 1;
+        //        }
+        //    }
+        //}
+
         // 寻路限制
-        public static bool PathFilter(ref bool __result, ref PathFinder.PotentialPath path, int from_cell, NavType from_nav_type, Navigator navigator)
+        public static bool PathFilter(ref PathFinder.PotentialPath path, int from_cell, NavType from_nav_type, Navigator navigator)
         {
             if (path.navType != NavType.Floor || from_nav_type != NavType.Floor) return true;
 
-            int cell = path.cell;
+            int targetCell = path.cell;
+            CellOffset offset = Grid.GetOffset(from_cell, targetCell);
+
+            //快速过滤
+            if(offset.y == 0) return true;
+            int c_b = Grid.CellBelow(targetCell);
             int f_b = Grid.CellBelow(from_cell);
-            bool cellNotStair = !MyGrid.IsStair(cell);
-            bool fromStair = MyGrid.IsStair(from_cell);
-            bool fromNotScaff = !MyGrid.IsScaffolding(from_cell);
-            //if (!MyGrid.IsStair(f_b) && !fromStair && cellNotStair && !MyGrid.IsScaffolding(cell) && fromNotScaff) return true;
-
-            CellOffset offset = Grid.GetOffset(from_cell, cell);
-
-            bool goUpAndStr = offset.y >= 0;
-            if (goUpAndStr)
+            if(MyGrid.IsHypotenuse(c_b) || MyGrid.IsHypotenuse(f_b))
             {
-                bool goStraight = offset.y == 0;
-                if (fromStair && goStraight)
-                    return true;
-                if (!fromNotScaff && goStraight)
-                    return true;
-                bool flag = true;
-
-                int f_a = Grid.CellAbove(from_cell);
-                if (offset.y > 1)
+                if(offset.y == 1)
                 {
-                    int f_a_a = Grid.CellAbove(f_a);
-                    if (MyGrid.IsScaffolding(f_a) || MyGrid.IsScaffolding(f_a_a)) flag = false;
-                }
-                else if (offset.y == 1)
-                {
-                    if (MyGrid.IsScaffolding(cell))
+                    if (offset.x == 1)
                     {
-                        if (MyGrid.IsWalkable(f_b))
-                        {
-                            int c_b = Grid.CellBelow(cell);
-                            if (!MyGrid.IsWalkable(c_b)) flag = false;
-                        }
-                        else if (MyGrid.IsScaffolding(f_a))
-                            flag = false;
+                        if (!MyGrid.IsRightSet(c_b)) return true;
                     }
-                    else if (MyGrid.IsScaffolding(f_a))
-                        flag = false;
-                }
-
-                if (MyGrid.IsRightSet(f_b))
-                {
-                    if (!fromStair)
+                    else if(offset.x == -1)
                     {
-                        if (goUpAndStr && flag) return true;
-                        else if (offset.x > 0 && flag) return true;
+                        if (MyGrid.IsRightSet(c_b)) return true;
                     }
                 }
-                else
+                else if(offset.y == -1)
                 {
-                    if (!fromStair)
+                    if (!MyGrid.IsHypotenuse(targetCell) && MyGrid.IsWalkable(targetCell)) return false;
+                    if (offset.x == 1)
                     {
-                        if (goUpAndStr && flag) return true;
-                        else if (offset.x < 0 && flag) return true;
+                        if (MyGrid.IsRightSet(f_b)) return true;
+                    }
+                    else if (offset.x == -1)
+                    {
+                        if (!MyGrid.IsRightSet(f_b)) return true;
                     }
                 }
             }
-            else if (cellNotStair)
+
+            //完整过滤
+            if(offset.y > 0 && offset.x >= -1 && offset.x <= 1)
+            {
+                int offsetCell = Grid.OffsetCell(from_cell, 0, 1);
+                if (MyGrid.IsScaffolding(offsetCell)) return false;
+                if (offset.x != 0)
+                {
+                    if (MyGrid.IsWalkable(from_cell)) return false; 
+                    if (offset.x > 0)
+                    {
+                        if (MyGrid.IsHypotenuse(offsetCell) && MyGrid.IsRightSet(offsetCell)) return false;
+                        if (offset.x > 1)
+                        {
+                            offsetCell = Grid.CellLeft(targetCell);
+                            if (MyGrid.IsHypotenuse(offsetCell) && MyGrid.IsRightSet(offsetCell)) return false;
+                        }
+                    }else if (offset.x < 0)
+                    {
+                        if (MyGrid.IsHypotenuse(offsetCell) && !MyGrid.IsRightSet(offsetCell)) return false;
+                        if (offset.x < -1)
+                        {
+                            offsetCell = Grid.CellRight(targetCell);
+                            if (MyGrid.IsHypotenuse(offsetCell) && !MyGrid.IsRightSet(offsetCell)) return false;
+                        }
+                    }
+                }
+                else {
+                    if (MyGrid.IsHypotenuse(from_cell)) return false;
+                }
+                if (offset.y > 1)
+                {
+                    offsetCell = Grid.OffsetCell(from_cell, 0, 2);
+                    if (MyGrid.IsScaffolding(offsetCell)) return false;
+                    if (MyGrid.IsWalkable(offsetCell)) return false;
+                }
+            }
+            else if(offset.y < 0)
             {
                 if (offset.x > 0)
                 {
-                    int f_r = Grid.CellRight(from_cell);
-                    if (offset.y == -1)
+                    if (MyGrid.IsWalkable(targetCell)) return false;
+                    int offsetCell = Grid.CellRight(from_cell);
+                    if (MyGrid.IsScaffolding(offsetCell)) return false;
+                    if (MyGrid.IsWalkable(offsetCell) && !MyGrid.IsRightSet(offsetCell)) return false;
+                    if(offset.x > 1)
                     {
-                        if (MyGrid.IsRightSet(f_b) && MyGrid.IsStair(f_b))
-                        {
-                            if (!fromStair) return true;
-                        }
-                        else if (!MyGrid.IsScaffolding(f_r)) return true;
+                        offsetCell = Grid.CellRight(offsetCell);
+                        if (MyGrid.IsScaffolding(offsetCell)) return false;
+                        if (MyGrid.IsWalkable(offsetCell) && !MyGrid.IsRightSet(offsetCell)) return false;
                     }
-                    else
+                    else if (offset.y < -1)
                     {
-                        int f_b_r = Grid.CellRight(f_b);
-                        if (!MyGrid.IsStair(f_b_r) && !MyGrid.IsScaffolding(f_r) && !MyGrid.IsScaffolding(f_b_r)) return true;
+                        offsetCell = Grid.CellDownRight(from_cell);
+                        if (MyGrid.IsScaffolding(offsetCell)) return false;
+                        if (MyGrid.IsWalkable(offsetCell)) return false;
+                        offsetCell = Grid.CellBelow(offsetCell);
+                        if (MyGrid.IsWalkable(offsetCell)) return false;
                     }
                 }
-                else if (offset.x < 0)
+                else if(offset.x < 0)
                 {
-                    int f_l = Grid.CellLeft(from_cell);
-                    if (offset.y == -1)
+                    if (MyGrid.IsWalkable(targetCell)) return false;
+                    int offsetCell = Grid.CellLeft(from_cell);
+                    if (MyGrid.IsScaffolding(offsetCell)) return false;
+                    if (MyGrid.IsWalkable(offsetCell) && MyGrid.IsRightSet(offsetCell)) return false;
+                    if (offset.x < -1)
                     {
-                        if (!MyGrid.IsRightSet(f_b) && MyGrid.IsStair(f_b))
-                        {
-                            if (!fromStair) return true;
-                        }
-                        else if (!MyGrid.IsScaffolding(f_l)) return true;
+                        offsetCell = Grid.CellLeft(offsetCell);
+                        if (MyGrid.IsScaffolding(offsetCell)) return false;
+                        if (MyGrid.IsWalkable(offsetCell) && MyGrid.IsRightSet(offsetCell)) return false;
                     }
-                    else
+                    else if (offset.y < -1)
                     {
-                        int f_b_l = Grid.CellLeft(f_b);
-                        if (!MyGrid.IsStair(f_b_l) && !MyGrid.IsScaffolding(f_l) && !MyGrid.IsScaffolding(f_b_l)) return true;
+                        offsetCell = Grid.CellDownLeft(from_cell);
+                        if (MyGrid.IsScaffolding(offsetCell)) return false;
+                        if (MyGrid.IsWalkable(offsetCell)) return false;
+                        offsetCell = Grid.CellBelow(offsetCell);
+                        if (MyGrid.IsWalkable(offsetCell)) return false;
                     }
                 }
                 else
                 {
-                    if (fromNotScaff) return true;
+                    if (MyGrid.IsScaffolding(from_cell)) return false;
+                    int offsetCell = Grid.CellBelow(from_cell);
+                    if (MyGrid.IsHypotenuse(offsetCell)) return false;
+                    if (offset.y < -1)
+                    {
+                        if (MyGrid.IsScaffolding(offsetCell)) return false;
+                        offsetCell = Grid.OffsetCell(from_cell, 0, -2);
+                        if (MyGrid.IsWalkable(offsetCell)) return false;
+                    }
                 }
-
             }
 
-            __result = false;
-            return false;
+            return true;
         }
 
         [HarmonyPatch(typeof(CreaturePathFinderAbilities))]
@@ -381,7 +420,8 @@ namespace Stairs
             public static bool Prefix(Navigator ___navigator, ref bool __result, ref PathFinder.PotentialPath path, int from_cell, NavType from_nav_type, int cost, int transition_id, bool submerged)
             {
                 if (___navigator.NavGridName != "RobotNavGrid") return true;
-                return PathFilter(ref __result, ref path, from_cell, from_nav_type, ___navigator);
+                __result = false;
+                return PathFilter( ref path, from_cell, from_nav_type, ___navigator);
             }
         }
 
@@ -391,7 +431,8 @@ namespace Stairs
         {
             public static bool Prefix(Navigator ___navigator, ref bool __result, ref PathFinder.PotentialPath path, int from_cell, NavType from_nav_type, int cost, int transition_id, bool submerged)
             {
-                return PathFilter(ref __result, ref path, from_cell, from_nav_type, ___navigator);
+                __result = false;
+                return PathFilter( ref path, from_cell, from_nav_type, ___navigator);
             }
         }
 

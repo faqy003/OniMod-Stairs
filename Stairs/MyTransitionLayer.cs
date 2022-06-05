@@ -59,8 +59,7 @@ namespace Stairs
                     if (MyGrid.IsRightSet(offset)) return;
                 }
             }
-            if (!MyGrid.IsWalkable(offset)) return;
-
+            if (!MyGrid.IsHypotenuse(offset)) return;
 
             if (transition.y > 0)
             {

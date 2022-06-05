@@ -118,6 +118,14 @@ namespace Stairs
             }
             if (MyGrid.IsStair(cell))
             {
+                if (showStairs)
+                {
+                    MyGrid.Masks[cell] |= MyGrid.Flags.Hypotenuse;
+                }
+                else
+                {
+                    MyGrid.Masks[cell] &= ~MyGrid.Flags.Hypotenuse;
+                }
                 if (showStairs || !is_blocked_above)
                 {
                     MyGrid.Masks[cell] |= MyGrid.Flags.Walkable;
@@ -195,7 +203,6 @@ namespace Stairs
 
         private HandleVector<int>.Handle partitionerEntry;
         private Extents extents;
-        //private bool underConstruction = true;
         public ObjectLayer objectLayer = ObjectLayer.Building;
 
         private static readonly KAnimHashedString[] leftSymbols = new KAnimHashedString[]
@@ -247,7 +254,7 @@ namespace Stairs
             Rotatable rotatable = GetComponent<Rotatable>();
             int cell = Grid.PosToCell(this);
             MyGrid.Masks[cell] |= MyGrid.Flags.HasStair;
-            MyGrid.Masks[cell] |= MyGrid.Flags.Walkable;
+            //MyGrid.Masks[cell] |= MyGrid.Flags.Walkable;
             if (rotatable.GetOrientation() == Orientation.FlipH)
             {
                 MyGrid.Masks[cell] |= MyGrid.Flags.RightSet;
@@ -259,9 +266,7 @@ namespace Stairs
         {
             base.OnCleanUp();
             int cell = Grid.PosToCell(this);
-            bool isscaff = MyGrid.IsScaffolding(cell);
-            MyGrid.Masks[cell] = 0;
-            if (isscaff) MyGrid.Masks[cell] |= MyGrid.Flags.HasScaffolding;
+            MyGrid.Masks[cell] = MyGrid.IsScaffolding(cell) ? MyGrid.Flags.HasScaffolding : 0;
             Pathfinding.Instance.AddDirtyNavGridCell(Grid.CellAbove(cell));
         }
 
