@@ -190,7 +190,7 @@ namespace Stairs
             public static bool Prefix(Navigator ___navigator)
             {
                 if (___navigator == null) return true;
-                if (!MyGrid.IsStair(Grid.PosToCell(___navigator))) return true;
+                if (!MyGrid.IsHypotenuse(Grid.PosToCell(___navigator))) return true;
                 MyTransitionLayer layer = (MyTransitionLayer)___navigator.transitionDriver.overrideLayers.Find(x => x.GetType() == typeof(MyTransitionLayer));
                 if (layer == null || !layer.isMovingOnStaris) return true;
                 return false;
@@ -202,40 +202,66 @@ namespace Stairs
         [HarmonyPatch("IsAreaClear")]
         public static class BuildingDef_IsAreaClear_Patch
         {
-            public static bool IsScaffolding(GameObject go)
+            private static bool IsScaffolding(GameObject go)
             {
                 if (go == null) return false;
-                if (go.HasTag(tag_Scaffolding)) return false;
+                if (!go.HasTag(tag_Scaffolding)) return false;
                 return true;
+            }
+            private static bool IsSolid(int cell)
+            {
+                GameObject go = Grid.Objects[cell, (int)ObjectLayer.Building];
+                if (go == null) return false;
+
+                Building building = go.GetComponent<Building>();
+                if (building == null)
+                {
+                    building = go.GetComponent<BuildingUnderConstruction>();
+                    if(building == null) return false;
+                }
+                GameObject go_c = building.Def.BuildingComplete;
+                if(go_c.GetComponent<Door>() != null) return true;
+                MakeBaseSolid.Def def = go_c.GetDef<MakeBaseSolid.Def>();
+                if (def == null) return false;
+                int cell_go = Grid.PosToCell(go);
+                for (int j = 0; j < def.solidOffsets.Length; j++)
+				{
+					CellOffset rotatedCellOffset = Rotatable.GetRotatedCellOffset(def.solidOffsets[j], building.Orientation);
+                    if (Grid.OffsetCell(cell_go,rotatedCellOffset) == cell) return true;
+				}
+                return false;
+            }
+            private static bool CheckAll(int cell, CellOffset[] offsets,Orientation orientation)
+            {
+                for (int i = 0; i < offsets.Length; i++)
+                {
+                    CellOffset offset = offsets[i];
+                    CellOffset rotatedCellOffset = Rotatable.GetRotatedCellOffset(offset, orientation);
+                    int offset_cell = Grid.OffsetCell(cell, rotatedCellOffset);
+                    GameObject go = Grid.Objects[offset_cell, (int)ObjectLayer.AttachableBuilding];
+                    if (IsScaffolding(go)) return true;
+                }
+                return false;
             }
             public static void Postfix(BuildingDef __instance, ref bool __result, GameObject source_go, int cell, Orientation orientation, ObjectLayer layer, ObjectLayer tile_layer, bool replace_tile, ref string fail_reason)
             {
                 if (!__result) return;
+                GameObject go_c = source_go.GetComponent<BuildingPreview>().Def.BuildingComplete;
                 if (layer == ObjectLayer.Gantry || __instance.BuildLocationRule == BuildLocationRule.Tile || __instance.BuildLocationRule == BuildLocationRule.HighWattBridgeTile)
                 {
-                    for (int i = 0; i < __instance.PlacementOffsets.Length; i++)
-                    {
-                        CellOffset offset = __instance.PlacementOffsets[i];
-                        CellOffset rotatedCellOffset = Rotatable.GetRotatedCellOffset(offset, orientation);
-                        int offset_cell = Grid.OffsetCell(cell, rotatedCellOffset);
-                        GameObject go = Grid.Objects[offset_cell, (int)ObjectLayer.AttachableBuilding];
-                        if (IsScaffolding(go))
-                        {
-                            __result = false;
-                            break;
-                        }
-                    }
+                    if(CheckAll(cell,__instance.PlacementOffsets,orientation)) __result = false;
+                }
+                else if (go_c.GetDef<MakeBaseSolid.Def>() != null)
+                {
+                    MakeBaseSolid.Def def = go_c.GetDef<MakeBaseSolid.Def>();
+                    if (CheckAll(cell, def.solidOffsets, orientation)) __result = false;
                 }
                 else
                 {
                     if (!IsScaffolding(source_go)) return;
+                    if (!Grid.IsWorldValidCell(cell)) return;
                     if (Grid.Objects[cell, (int)ObjectLayer.Gantry] != null) __result = false;
-                    //else if(Grid.Objects[cell, (int)ObjectLayer.Building] != null)
-                    //{
-                    //	GameObject go = Grid.Objects[cell, (int)ObjectLayer.Building];
-                    //	var makeBaseSolid = go.GetComponent<MakeBaseSolid>();
-                    //	if (makeBaseSolid != null) __result = false;
-                    //}
+                    else if (IsSolid(cell)) __result = false;
                 }
                 if (!__result) fail_reason = UI.TOOLTIPS.HELP_BUILDLOCATION_OCCUPIED;
             }
@@ -263,6 +289,18 @@ namespace Stairs
                 }
             }
         }
+
+        //
+        //[HarmonyPatch(typeof(NavTable))]
+        //[HarmonyPatch("SetValid")]
+        //public static class NavTable_SetValid_Patch
+        //{
+        //    public static void Prefix(int cell, NavType nav_type, bool is_valid)
+        //    {
+        //        if (is_valid) return;
+        //        if (nav_type != NavType.Floor) return;
+        //    }
+        //}
 
         //[HarmonyPatch(typeof(PathFinder.PotentialList))]
         //[HarmonyPatch("Add")]
@@ -317,7 +355,7 @@ namespace Stairs
             }
 
             //完整过滤
-            if(offset.y > 0 && offset.x >= -1 && offset.x <= 1)
+            if(offset.y > 0)
             {
                 int offsetCell = Grid.OffsetCell(from_cell, 0, 1);
                 if (MyGrid.IsScaffolding(offsetCell)) return false;
@@ -329,7 +367,7 @@ namespace Stairs
                         if (MyGrid.IsHypotenuse(offsetCell) && MyGrid.IsRightSet(offsetCell)) return false;
                         if (offset.x > 1)
                         {
-                            offsetCell = Grid.CellLeft(targetCell);
+                            offsetCell = Grid.CellRight(offsetCell);
                             if (MyGrid.IsHypotenuse(offsetCell) && MyGrid.IsRightSet(offsetCell)) return false;
                         }
                     }else if (offset.x < 0)
@@ -337,7 +375,7 @@ namespace Stairs
                         if (MyGrid.IsHypotenuse(offsetCell) && !MyGrid.IsRightSet(offsetCell)) return false;
                         if (offset.x < -1)
                         {
-                            offsetCell = Grid.CellRight(targetCell);
+                            offsetCell = Grid.CellLeft(offsetCell);
                             if (MyGrid.IsHypotenuse(offsetCell) && !MyGrid.IsRightSet(offsetCell)) return false;
                         }
                     }
@@ -352,7 +390,7 @@ namespace Stairs
                     if (MyGrid.IsWalkable(offsetCell)) return false;
                 }
             }
-            else if(offset.y < 0)
+            else
             {
                 if (offset.x > 0)
                 {

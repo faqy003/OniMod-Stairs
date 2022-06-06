@@ -109,10 +109,16 @@ namespace Stairs
             go.AddOrGet<Scaffolding>();
             //GeneratedBuildings.RemoveLoopingSounds(go);
         }
+        public override void DoPostConfigurePreview(BuildingDef def, GameObject go)
+        {
+            base.DoPostConfigurePreview(def, go);
+            go.AddTag(Patches.tag_Scaffolding);
+        }
         public override void DoPostConfigureUnderConstruction(GameObject go)
         {
             go.AddOrGet<AnimTileable>().objectLayer = ObjectLayer.AttachableBuilding;
             base.DoPostConfigureUnderConstruction(go);
+            go.AddTag(Patches.tag_Scaffolding);
         }
     }
     public class ScaffoldingAlt1Config : IBuildingConfig
@@ -147,10 +153,16 @@ namespace Stairs
             go.AddOrGet<Scaffolding>();
             //GeneratedBuildings.RemoveLoopingSounds(go);
         }
+        public override void DoPostConfigurePreview(BuildingDef def, GameObject go)
+        {
+            base.DoPostConfigurePreview(def, go);
+            go.AddTag(Patches.tag_Scaffolding);
+        }
         public override void DoPostConfigureUnderConstruction(GameObject go)
         {
             go.AddOrGet<AnimTileable>().objectLayer = ObjectLayer.AttachableBuilding;
             base.DoPostConfigureUnderConstruction(go);
+            go.AddTag(Patches.tag_Scaffolding);
         }
     }
     public class ScaffoldingAlt2Config : IBuildingConfig
@@ -186,10 +198,16 @@ namespace Stairs
             go.AddOrGet<Scaffolding>();
             //GeneratedBuildings.RemoveLoopingSounds(go);
         }
+        public override void DoPostConfigurePreview(BuildingDef def, GameObject go)
+        {
+            base.DoPostConfigurePreview(def, go);
+            go.AddTag(Patches.tag_Scaffolding);
+        }
         public override void DoPostConfigureUnderConstruction(GameObject go)
         {
             go.AddOrGet<AnimTileable>().objectLayer = ObjectLayer.AttachableBuilding;
             base.DoPostConfigureUnderConstruction(go);
+            go.AddTag(Patches.tag_Scaffolding);
         }
     }
     public class StairsConfig : IBuildingConfig

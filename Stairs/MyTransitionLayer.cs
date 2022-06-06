@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using KSerialization;
+using UnityEngine;
 
 namespace Stairs
 {
@@ -10,7 +11,7 @@ namespace Stairs
         public const float scaffoldingSpeedMultiplier = 1.5f;
         public MyTransitionLayer(Navigator navigator) : base(navigator)
         {
-            isMovingOnStaris = false;
+            //isMovingOnStaris = true;
             time = Time.time;
         }
         public override void BeginTransition(Navigator navigator, Navigator.ActiveTransition transition)
@@ -89,11 +90,13 @@ namespace Stairs
             float step = (Time.time - time) * transition.speed;
             time = Time.time;
 
-            if (transition.y > 0)
+            bool goUp = transition.y > 0;
+            bool goDown = transition.y < 0;
+            if (goUp)
             {
                 pos.y += step;
             }
-            else if (transition.y < 0)
+            else if (goDown)
             {
                 pos.y -= step;
             }
@@ -106,7 +109,7 @@ namespace Stairs
                 pos.x -= step;
             }
 
-            if ((transition.y > 0 && pos.y > targetPos.y) || (transition.y < 0 && pos.y < targetPos.y))
+            if ((goUp && pos.y > targetPos.y) || (goDown && pos.y < targetPos.y))
             {
                 transition.isLooping = true;
                 return;
@@ -127,7 +130,8 @@ namespace Stairs
             }
             isMovingOnStaris = false;
         }
-        public bool isMovingOnStaris;
+
+        public bool isMovingOnStaris = false;
         private float time;
         private Vector3 startPos;
         private Vector3 targetPos;
