@@ -72,6 +72,30 @@
     <Compile Include="scaffolding.cs" />
     <Compile Include="Stair.cs" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="anim\assets\scaffolding\scaffolding_anim.bytes" />
+    <None Include="anim\assets\scaffolding\scaffolding_build.bytes" />
+    <None Include="anim\assets\scaffolding_alt1\scaffolding_alt1_anim.bytes" />
+    <None Include="anim\assets\scaffolding_alt1\scaffolding_alt1_build.bytes" />
+    <None Include="anim\assets\scaffolding_alt2\scaffolding_alt2_anim.bytes" />
+    <None Include="anim\assets\scaffolding_alt2\scaffolding_alt2_build.bytes" />
+    <None Include="anim\assets\stairs\stairs_anim.bytes" />
+    <None Include="anim\assets\stairs\stairs_build.bytes" />
+    <None Include="anim\assets\stairs_alt1\stairs_alt_anim.bytes" />
+    <None Include="anim\assets\stairs_alt1\stairs_alt_build.bytes" />
+    <None Include="anim\assets\stairs_classic\stairs_classic_anim.bytes" />
+    <None Include="anim\assets\stairs_classic\stairs_classic_build.bytes" />
+    <None Include="loc\stairs_template.pot" />
+    <None Include="loc\zh.po" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="anim\assets\scaffolding\scaffolding.png" />
+    <Content Include="anim\assets\scaffolding_alt1\scaffolding_alt1.png" />
+    <Content Include="anim\assets\scaffolding_alt2\scaffolding_alt2.png" />
+    <Content Include="anim\assets\stairs\stairs.png" />
+    <Content Include="anim\assets\stairs_alt1\stairs_alt.png" />
+    <Content Include="anim\assets\stairs_classic\stairs_classic.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>COPY /Y "$(TargetPath)" "K:\My Documents\Klei\OxygenNotIncluded\mods\dev\Stairs"</PostBuildEvent>

@@ -1,0 +1,173 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"POT-Creation-Date: \n"
+"PO-Revision-Date: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: zh\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"Application: Oxygen Not IncludedPOT Version: 2.0\n"
+"X-Generator: Poedit 3.0.1\n"
+
+#. STRINGS.BUILDINGS.PREFABS.STAIRS.DESC
+msgctxt "STRINGS.BUILDINGS.PREFABS.STAIRS.DESC"
+msgid "(After we made Space Rocket we even invented Stairs)"
+msgstr "（在发明了火箭之后我们甚至发明出了台阶）"
+
+#. STRINGS.BUILDINGS.PREFABS.STAIRS.EFFECT
+msgctxt "STRINGS.BUILDINGS.PREFABS.STAIRS.EFFECT"
+msgid ""
+"Saving energy by step up and down.\n"
+"\n"
+"Walking down strairs will be easy and fast and tiny slower when walking up."
+msgstr ""
+"使复制人可以步行上下，节省力气。\n"
+"\n"
+"下台阶的速度会很快，向上则会稍慢。"
+
+#. STRINGS.BUILDINGS.PREFABS.STAIRS.NAME
+msgctxt "STRINGS.BUILDINGS.PREFABS.STAIRS.NAME"
+msgid "Stairs"
+msgstr "台阶"
+
+#. STRINGS.BUILDINGS.PREFABS.STAIRS_CLASSIC.DESC
+msgctxt "STRINGS.BUILDINGS.PREFABS.STAIRS_CLASSIC.DESC"
+msgid "(Deja Vu)"
+msgstr "（似曾相识）"
+
+#. STRINGS.BUILDINGS.PREFABS.STAIRS_CLASSIC.EFFECT
+msgctxt "STRINGS.BUILDINGS.PREFABS.STAIRS_CLASSIC.EFFECT"
+msgid ""
+"Saving energy by step up and down.\n"
+"\n"
+"Walking down strairs will be easy and fast and tiny slower when walking up."
+msgstr ""
+"使复制人可以步行上下，节省力气。\n"
+"\n"
+"下台阶的速度会很快，向上则会稍慢。"
+
+#. STRINGS.BUILDINGS.PREFABS.STAIRS_CLASSIC.NAME
+msgctxt "STRINGS.BUILDINGS.PREFABS.STAIRS_CLASSIC.NAME"
+msgid "Classic Stairs"
+msgstr "经典台阶"
+
+#. STRINGS.BUILDINGS.PREFABS.STAIRS_ALT1.DESC
+msgctxt "STRINGS.BUILDINGS.PREFABS.STAIRS_ALT1.DESC"
+msgid "(All those materials in your storage won't get you any money)"
+msgstr "（你囤那么多材料又不能挣钱）"
+
+#. STRINGS.BUILDINGS.PREFABS.STAIRS_ALT1.EFFECT
+msgctxt "STRINGS.BUILDINGS.PREFABS.STAIRS_ALT1.EFFECT"
+msgid ""
+"In addition to the better material, there is no different from normal stairs."
+msgstr "除了用料比较豪华外，使用上与普通台阶没有什么不同。"
+
+#. STRINGS.BUILDINGS.PREFABS.STAIRS_ALT1.NAME
+msgctxt "STRINGS.BUILDINGS.PREFABS.STAIRS_ALT1.NAME"
+msgid "Deluxe Stairs"
+msgstr "豪华台阶"
+
+#. STRINGS.BUILDINGS.PREFABS.URFSCAFFOLDING.DESC
+msgctxt "STRINGS.BUILDINGS.PREFABS.URFSCAFFOLDING.DESC"
+msgid "(It's a little unstable, any climbing is not recommended.)"
+msgstr "（由于不太结实，不建议在上面攀爬）"
+
+#. STRINGS.BUILDINGS.PREFABS.URFSCAFFOLDING.EFFECT
+msgctxt "STRINGS.BUILDINGS.PREFABS.URFSCAFFOLDING.EFFECT"
+msgid ""
+"Thin plate that fast to build and allow Duplicants walk on it.\n"
+"\n"
+"Able to overlay on other buildings."
+msgstr ""
+"一种可以快速建造的薄板，可供复制人在上面行走。\n"
+"\n"
+"可与其他建筑叠加。"
+
+#. STRINGS.BUILDINGS.PREFABS.URFSCAFFOLDING.NAME
+msgctxt "STRINGS.BUILDINGS.PREFABS.URFSCAFFOLDING.NAME"
+msgid "Scaffolding"
+msgstr "脚手架"
+
+#. STRINGS.UI.USERMENUACTIONS.STAIRSBUTTON.NAME
+msgctxt "STRINGS.UI.USERMENUACTIONS.STAIRSBUTTON.NAME"
+msgid "Change Direction"
+msgstr "改变方向"
+
+#. STRINGS.UI.USERMENUACTIONS.STAIRSBUTTON.TOOLTIP
+msgctxt "STRINGS.UI.USERMENUACTIONS.STAIRSBUTTON.TOOLTIP"
+msgid "Make stairs towards another side."
+msgstr "更改台阶的朝向。"
+
+#. STRINGS.BUILDINGS.PREFABS.URFSCAFFOLDING_ALT1.DESC
+msgctxt "STRINGS.BUILDINGS.PREFABS.URFSCAFFOLDING_ALT1.DESC"
+msgid "(It's a little unstable, any climbing is not recommended.)"
+msgstr "（由于不太结实，不建议在上面攀爬）"
+
+#. STRINGS.BUILDINGS.PREFABS.URFSCAFFOLDING_ALT1.EFFECT
+msgctxt "STRINGS.BUILDINGS.PREFABS.URFSCAFFOLDING_ALT1.EFFECT"
+msgid ""
+"It just for walk.\n"
+"\n"
+"Able to overlay on other buildings."
+msgstr ""
+"反正能走人。\n"
+"\n"
+"可与其他建筑叠加。"
+
+#. STRINGS.BUILDINGS.PREFABS.URFSCAFFOLDING_ALT1.NAME
+msgctxt "STRINGS.BUILDINGS.PREFABS.URFSCAFFOLDING_ALT1.NAME"
+msgid "Simple Footbridge"
+msgstr "简易步道"
+
+#. STRINGS.BUILDINGS.PREFABS.URFSCAFFOLDING_ALT2.DESC
+msgctxt "STRINGS.BUILDINGS.PREFABS.URFSCAFFOLDING_ALT2.DESC"
+msgid "(Safty first)"
+msgstr "（安全第一）"
+
+#. STRINGS.BUILDINGS.PREFABS.URFSCAFFOLDING_ALT2.EFFECT
+msgctxt "STRINGS.BUILDINGS.PREFABS.URFSCAFFOLDING_ALT2.EFFECT"
+msgid ""
+"Usually used for maintainer to get to the place that normally hard to "
+"reach.\n"
+"\n"
+"Runspeed bonus."
+msgstr ""
+"通常用于供维护人员抵达那些难以进入的区域。\n"
+"\n"
+"提供移速加成。"
+
+#. STRINGS.BUILDINGS.PREFABS.URFSCAFFOLDING_ALT2.NAME
+msgctxt "STRINGS.BUILDINGS.PREFABS.URFSCAFFOLDING_ALT2.NAME"
+msgid "Industry Catwalk"
+msgstr "工业步道"
+
+#~ msgctxt "STRINGS.BUILDINGS.PREFABS.STAIRS_CLASSIC.DESC"
+#~ msgid "(After we made Space Rocket we even invented Stairs)"
+#~ msgstr "（似曾相识）"
+
+#~ msgctxt "STRINGS.BUILDINGS.PREFABS.STAIRS_ALT1.DESC"
+#~ msgid ""
+#~ msgstr "（你囤那么多材料又不能挣钱）"
+
+#~ msgctxt "STRINGS.UI.USERMENUACTIONS.STAIRSBUTTON.TOOLTIP"
+#~ msgid "Determine which side the stairs should facing."
+#~ msgstr "更改台阶的朝向"
+
+#~ msgctxt "STRINGS.BUILDINGS.PREFABS.URFSCAFFOLDING_ALT2.DESC"
+#~ msgid "(It's a little unstable, any climbing is not recommended.)"
+#~ msgstr "（安全第一）"
+
+#~ msgctxt "STRINGS.BUILDINGS.PREFABS.URFSCAFFOLDING_ALT2.EFFECT"
+#~ msgid "<PlaceHold>"
+#~ msgstr ""
+#~ "通常用于供维护人员抵达那些难以进入的区域。\n"
+#~ "\n"
+#~ "提供移速加成。"
+
+#~ msgctxt "STRINGS.BUILDINGS.PREFABS.URFSCAFFOLDING_ALT1.NAME"
+#~ msgid "<PlaceHold>"
+#~ msgstr "简易步道"

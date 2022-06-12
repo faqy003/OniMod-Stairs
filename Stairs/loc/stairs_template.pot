@@ -1,0 +1,104 @@
+msgid ""
+msgstr ""
+"Application: Oxygen Not Included"
+"POT Version: 2.0"
+
+#. STRINGS.BUILDINGS.PREFABS.STAIRS.DESC
+msgctxt "STRINGS.BUILDINGS.PREFABS.STAIRS.DESC"
+msgid "(After we made Space Rocket we even invented Stairs)"
+msgstr ""
+
+#. STRINGS.BUILDINGS.PREFABS.STAIRS.EFFECT
+msgctxt "STRINGS.BUILDINGS.PREFABS.STAIRS.EFFECT"
+msgid "Saving energy by step up and down.\n\nWalking down strairs will be easy and fast and tiny slower when walking up."
+msgstr ""
+
+#. STRINGS.BUILDINGS.PREFABS.STAIRS.NAME
+msgctxt "STRINGS.BUILDINGS.PREFABS.STAIRS.NAME"
+msgid "Stairs"
+msgstr ""
+
+#. STRINGS.BUILDINGS.PREFABS.STAIRS_CLASSIC.DESC
+msgctxt "STRINGS.BUILDINGS.PREFABS.STAIRS_CLASSIC.DESC"
+msgid "(Deja Vu)"
+msgstr ""
+
+#. STRINGS.BUILDINGS.PREFABS.STAIRS_CLASSIC.EFFECT
+msgctxt "STRINGS.BUILDINGS.PREFABS.STAIRS_CLASSIC.EFFECT"
+msgid "Saving energy by step up and down.\n\nWalking down strairs will be easy and fast and tiny slower when walking up."
+msgstr ""
+
+#. STRINGS.BUILDINGS.PREFABS.STAIRS_CLASSIC.NAME
+msgctxt "STRINGS.BUILDINGS.PREFABS.STAIRS_CLASSIC.NAME"
+msgid "Classic Stairs"
+msgstr ""
+
+#. STRINGS.BUILDINGS.PREFABS.STAIRS_ALT1.DESC
+msgctxt "STRINGS.BUILDINGS.PREFABS.STAIRS_ALT1.DESC"
+msgid "(All those materials in your storage won't get you any money)"
+msgstr ""
+
+#. STRINGS.BUILDINGS.PREFABS.STAIRS_ALT1.EFFECT
+msgctxt "STRINGS.BUILDINGS.PREFABS.STAIRS_ALT1.EFFECT"
+msgid "In addition to the better material, there is no different from normal stairs."
+msgstr ""
+
+#. STRINGS.BUILDINGS.PREFABS.STAIRS_ALT1.NAME
+msgctxt "STRINGS.BUILDINGS.PREFABS.STAIRS_ALT1.NAME"
+msgid "Deluxe Stairs"
+msgstr ""
+
+#. STRINGS.BUILDINGS.PREFABS.URFSCAFFOLDING.DESC
+msgctxt "STRINGS.BUILDINGS.PREFABS.URFSCAFFOLDING.DESC"
+msgid "(It's a little unstable, any climbing is not recommended.)"
+msgstr ""
+
+#. STRINGS.BUILDINGS.PREFABS.URFSCAFFOLDING.EFFECT
+msgctxt "STRINGS.BUILDINGS.PREFABS.URFSCAFFOLDING.EFFECT"
+msgid "Thin plate that fast to build and allow Duplicants walk on it.\n\nAble to overlay on other buildings."
+msgstr ""
+
+#. STRINGS.BUILDINGS.PREFABS.URFSCAFFOLDING.NAME
+msgctxt "STRINGS.BUILDINGS.PREFABS.URFSCAFFOLDING.NAME"
+msgid "Scaffolding"
+msgstr ""
+
+#. STRINGS.UI.USERMENUACTIONS.STAIRSBUTTON.NAME
+msgctxt "STRINGS.UI.USERMENUACTIONS.STAIRSBUTTON.NAME"
+msgid "Change Direction"
+msgstr ""
+
+#. STRINGS.UI.USERMENUACTIONS.STAIRSBUTTON.TOOLTIP
+msgctxt "STRINGS.UI.USERMENUACTIONS.STAIRSBUTTON.TOOLTIP"
+msgid "Make stairs towards another side."
+msgstr ""
+
+#. STRINGS.BUILDINGS.PREFABS.URFSCAFFOLDING_ALT1.DESC
+msgctxt "STRINGS.BUILDINGS.PREFABS.URFSCAFFOLDING_ALT1.DESC"
+msgid "(It's a little unstable, any climbing is not recommended.)"
+msgstr ""
+
+#. STRINGS.BUILDINGS.PREFABS.URFSCAFFOLDING_ALT1.EFFECT
+msgctxt "STRINGS.BUILDINGS.PREFABS.URFSCAFFOLDING_ALT1.EFFECT"
+msgid "It just for walk.\n\nAble to overlay on other buildings."
+msgstr ""
+
+#. STRINGS.BUILDINGS.PREFABS.URFSCAFFOLDING_ALT1.NAME
+msgctxt "STRINGS.BUILDINGS.PREFABS.URFSCAFFOLDING_ALT1.NAME"
+msgid "Simple Footbridge"
+msgstr ""
+
+#. STRINGS.BUILDINGS.PREFABS.URFSCAFFOLDING_ALT2.DESC
+msgctxt "STRINGS.BUILDINGS.PREFABS.URFSCAFFOLDING_ALT2.DESC"
+msgid "(Safty first)"
+msgstr ""
+
+#. STRINGS.BUILDINGS.PREFABS.URFSCAFFOLDING_ALT2.EFFECT
+msgctxt "STRINGS.BUILDINGS.PREFABS.URFSCAFFOLDING_ALT2.EFFECT"
+msgid "Usually used for maintainer to get to the place that normally hard to reach.\n\nRunspeed bonus."
+msgstr ""
+
+#. STRINGS.BUILDINGS.PREFABS.URFSCAFFOLDING_ALT2.NAME
+msgctxt "STRINGS.BUILDINGS.PREFABS.URFSCAFFOLDING_ALT2.NAME"
+msgid "Industry Catwalk"
+msgstr ""
