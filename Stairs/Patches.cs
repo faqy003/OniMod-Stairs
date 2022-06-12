@@ -197,6 +197,21 @@ namespace Stairs
             }
         }
 
+        //路径感知修正
+        [HarmonyPatch(typeof(Navigator.PathProbeTask))]
+        [HarmonyPatch("Update")]
+        public class PathProbeTask_Patch
+        {
+            public static bool Prefix(Navigator ___navigator)
+            {
+                if (___navigator == null) return true;
+                if (!MyGrid.IsHypotenuse(Grid.PosToCell(___navigator))) return true;
+                MyTransitionLayer layer = (MyTransitionLayer)___navigator.transitionDriver.overrideLayers.Find(x => x.GetType() == typeof(MyTransitionLayer));
+                if (layer == null || !layer.isMovingOnStaris) return true;
+                return false;
+            }
+        }
+
         // 建筑摆放判定
         [HarmonyPatch(typeof(BuildingDef))]
         [HarmonyPatch("IsAreaClear")]
@@ -246,22 +261,31 @@ namespace Stairs
             public static void Postfix(BuildingDef __instance, ref bool __result, GameObject source_go, int cell, Orientation orientation, ObjectLayer layer, ObjectLayer tile_layer, bool replace_tile, ref string fail_reason)
             {
                 if (!__result) return;
-                GameObject go_c = source_go.GetComponent<BuildingPreview>().Def.BuildingComplete;
+                //GameObject go_c = source_go.GetComponent<BuildingPreview>().Def.BuildingComplete;
                 if (layer == ObjectLayer.Gantry || __instance.BuildLocationRule == BuildLocationRule.Tile || __instance.BuildLocationRule == BuildLocationRule.HighWattBridgeTile)
                 {
                     if(CheckAll(cell,__instance.PlacementOffsets,orientation)) __result = false;
                 }
-                else if (go_c.GetDef<MakeBaseSolid.Def>() != null)
-                {
-                    MakeBaseSolid.Def def = go_c.GetDef<MakeBaseSolid.Def>();
-                    if (CheckAll(cell, def.solidOffsets, orientation)) __result = false;
-                }
+                //else if (go_c.GetDef<MakeBaseSolid.Def>() != null)
+                //{
+                //    MakeBaseSolid.Def def = go_c.GetDef<MakeBaseSolid.Def>();
+                //    if (CheckAll(cell, def.solidOffsets, orientation)) __result = false;
+                //}
                 else
                 {
                     if (!IsScaffolding(source_go)) return;
                     if (!Grid.IsWorldValidCell(cell)) return;
                     if (Grid.Objects[cell, (int)ObjectLayer.Gantry] != null) __result = false;
-                    else if (IsSolid(cell)) __result = false;
+                    else if (Grid.Objects[cell, (int)ObjectLayer.Building] != null)
+                    {
+                        GameObject go = Grid.Objects[cell, (int)ObjectLayer.Building];
+
+                        Building building = go.GetComponent<Building>();
+                        if (building != null)
+                        {
+                            if(building.Def.BuildingComplete.GetComponent<Door>() != null) __result = false;
+                        }
+                    }
                 }
                 if (!__result) fail_reason = UI.TOOLTIPS.HELP_BUILDLOCATION_OCCUPIED;
             }
@@ -275,8 +299,8 @@ namespace Stairs
             public static void Postfix(ref bool __result, int cell, int anchor_cell, bool is_dupe)
             {
                 if (__result) return;
-                if (!Grid.IsWorldValidCell(cell)) return;
                 if (!is_dupe) return;
+                if (!Grid.IsWorldValidCell(cell)) return;
                 if (MyGrid.IsScaffolding(cell))
                 {
                     __result = true;
@@ -327,22 +351,24 @@ namespace Stairs
             if(offset.y == 0) return true;
             int c_b = Grid.CellBelow(targetCell);
             int f_b = Grid.CellBelow(from_cell);
-            if(MyGrid.IsHypotenuse(c_b) || MyGrid.IsHypotenuse(f_b))
+            if (offset.y == 1)
             {
-                if(offset.y == 1)
+                if (MyGrid.IsHypotenuse(c_b))
                 {
                     if (offset.x == 1)
                     {
                         if (!MyGrid.IsRightSet(c_b)) return true;
                     }
-                    else if(offset.x == -1)
+                    else if (offset.x == -1)
                     {
                         if (MyGrid.IsRightSet(c_b)) return true;
                     }
                 }
-                else if(offset.y == -1)
+            }
+            else if (offset.y == -1) {
+                if (MyGrid.IsHypotenuse(f_b))
                 {
-                    if (!MyGrid.IsHypotenuse(targetCell) && MyGrid.IsWalkable(targetCell)) return false;
+                    //if (!MyGrid.IsHypotenuse(targetCell) && MyGrid.IsWalkable(targetCell)) return false;
                     if (offset.x == 1)
                     {
                         if (MyGrid.IsRightSet(f_b)) return true;
@@ -367,16 +393,16 @@ namespace Stairs
                         if (MyGrid.IsHypotenuse(offsetCell) && MyGrid.IsRightSet(offsetCell)) return false;
                         if (offset.x > 1)
                         {
-                            offsetCell = Grid.CellRight(offsetCell);
-                            if (MyGrid.IsHypotenuse(offsetCell) && MyGrid.IsRightSet(offsetCell)) return false;
+                            int cellRight = Grid.CellRight(offsetCell);
+                            if (MyGrid.IsHypotenuse(cellRight) && MyGrid.IsRightSet(cellRight)) return false;
                         }
                     }else if (offset.x < 0)
                     {
                         if (MyGrid.IsHypotenuse(offsetCell) && !MyGrid.IsRightSet(offsetCell)) return false;
                         if (offset.x < -1)
                         {
-                            offsetCell = Grid.CellLeft(offsetCell);
-                            if (MyGrid.IsHypotenuse(offsetCell) && !MyGrid.IsRightSet(offsetCell)) return false;
+                            int cellLeft = Grid.CellLeft(offsetCell);
+                            if (MyGrid.IsHypotenuse(cellLeft) && !MyGrid.IsRightSet(cellLeft)) return false;
                         }
                     }
                 }
@@ -385,9 +411,10 @@ namespace Stairs
                 }
                 if (offset.y > 1)
                 {
+                    if (MyGrid.IsWalkable(offsetCell)) return false;
                     offsetCell = Grid.OffsetCell(from_cell, 0, 2);
                     if (MyGrid.IsScaffolding(offsetCell)) return false;
-                    if (MyGrid.IsWalkable(offsetCell)) return false;
+                    if (MyGrid.IsHypotenuse(c_b) && MyGrid.IsHypotenuse(offsetCell) && (MyGrid.IsRightSet(c_b) == MyGrid.IsRightSet(offsetCell))) return false;
                 }
             }
             else
@@ -397,7 +424,7 @@ namespace Stairs
                     if (MyGrid.IsWalkable(targetCell)) return false;
                     int offsetCell = Grid.CellRight(from_cell);
                     if (MyGrid.IsScaffolding(offsetCell)) return false;
-                    if (MyGrid.IsWalkable(offsetCell) && !MyGrid.IsRightSet(offsetCell)) return false;
+                    if (MyGrid.IsHypotenuse(f_b) && MyGrid.IsHypotenuse(offsetCell) && !MyGrid.IsRightSet(offsetCell)) return false;
                     if(offset.x > 1)
                     {
                         offsetCell = Grid.CellRight(offsetCell);
@@ -418,7 +445,7 @@ namespace Stairs
                     if (MyGrid.IsWalkable(targetCell)) return false;
                     int offsetCell = Grid.CellLeft(from_cell);
                     if (MyGrid.IsScaffolding(offsetCell)) return false;
-                    if (MyGrid.IsWalkable(offsetCell) && MyGrid.IsRightSet(offsetCell)) return false;
+                    if (MyGrid.IsHypotenuse(f_b) && MyGrid.IsHypotenuse(offsetCell) && MyGrid.IsRightSet(offsetCell)) return false;
                     if (offset.x < -1)
                     {
                         offsetCell = Grid.CellLeft(offsetCell);
@@ -473,6 +500,7 @@ namespace Stairs
                 return PathFilter( ref path, from_cell, from_nav_type, ___navigator);
             }
         }
+
 
         //      // 扫扫寻路
         //[HarmonyPatch(typeof(SweepStates))]

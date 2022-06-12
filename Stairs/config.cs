@@ -49,7 +49,7 @@ namespace Stairs
             int width = 1;
             int height = 1;
             int hitpoints = 5;
-            float construction_time = 10f;
+            float construction_time = 12f;
 
             float melting_point = BUILDINGS.MELTING_POINT_KELVIN.TIER2;
             BuildLocationRule build_location_rule = BuildLocationRule.NotInTiles;
@@ -182,7 +182,7 @@ namespace Stairs
 
             var buildingDef = BuidingTemplates.CreateScaffoldingDef(ID, "scaffolding_alt2_kanim", construction_mass, construction_materials);
             buildingDef.HitPoints = 50;
-            buildingDef.ConstructionTime = 20f;
+            buildingDef.ConstructionTime = 25f;
 
             return buildingDef;
         }
