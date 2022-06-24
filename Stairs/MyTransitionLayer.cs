@@ -81,49 +81,50 @@ namespace Stairs
             targetPos = Grid.CellToPosCBC(target_cell, navigator.sceneLayer);
             startPos = navigator.transform.GetPosition();
         }
-        public override void UpdateTransition(Navigator navigator, Navigator.ActiveTransition transition)
-        {
-            base.UpdateTransition(navigator, transition);
-            if (!isMovingOnStaris) return;
-            transition.isLooping = false;
-            Vector3 pos = navigator.transform.GetPosition();
-            float step = (Time.time - time) * transition.speed;
-            time = Time.time;
+        //public override void UpdateTransition(Navigator navigator, Navigator.ActiveTransition transition)
+        //{
+        //    base.UpdateTransition(navigator, transition);
+        //    if (!isMovingOnStaris) return;
+        //    transition.isLooping = false;
+        //    Vector3 pos = navigator.transform.GetPosition();
+        //    float step = (Time.time - time) * transition.speed;
+        //    time = Time.time;
 
-            bool goUp = transition.y > 0;
-            bool goDown = transition.y < 0;
-            if (goUp)
-            {
-                pos.y += step;
-            }
-            else if (goDown)
-            {
-                pos.y -= step;
-            }
-            if (transition.x > 0)
-            {
-                pos.x += step;
-            }
-            else if (transition.x < 0)
-            {
-                pos.x -= step;
-            }
+        //    bool goUp = transition.y > 0;
+        //    bool goDown = transition.y < 0;
+        //    if (goUp)
+        //    {
+        //        pos.y += step;
+        //    }
+        //    else if (goDown)
+        //    {
+        //        pos.y -= step;
+        //    }
+        //    if (transition.x > 0)
+        //    {
+        //        pos.x += step;
+        //    }
+        //    else if (transition.x < 0)
+        //    {
+        //        pos.x -= step;
+        //    }
 
-            if ((goUp && pos.y > targetPos.y) || (goDown && pos.y < targetPos.y))
-            {
-                transition.isLooping = true;
-                return;
-            }
+        //    if ((goUp && pos.y > targetPos.y) || (goDown && pos.y < targetPos.y))
+        //    {
+        //        transition.isLooping = true;
+        //        return;
+        //    }
 
-            navigator.transform.position = pos;
-        }
+        //    navigator.transform.position = pos;
+        //}
 
         public override void EndTransition(Navigator navigator, Navigator.ActiveTransition transition)
         {
             base.EndTransition(navigator, transition);
             if (isMovingOnStaris)
             {
-                if (!transition.isLooping)
+                int cell = Grid.PosToCell(navigator.transform.GetPosition());
+                if (MyGrid.IsHypotenuse(cell))
                 {
                     navigator.transform.position = startPos;
                 }

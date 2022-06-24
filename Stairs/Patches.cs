@@ -104,7 +104,7 @@ namespace Stairs
                 ChainedDeconstruction = false;
                 foreach (Mod mod in Global.Instance.modManager.mods)
                 {
-                    if (!mod.enabled) continue;
+                    if (!mod.IsActive()) continue;
                     if (mod.title == "ChainedDeconstruction")
                     {
                         ChainedDeconstruction = true;
