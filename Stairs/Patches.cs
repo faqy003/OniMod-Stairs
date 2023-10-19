@@ -190,7 +190,9 @@ namespace Stairs
             public static bool Prefix(Navigator ___navigator)
             {
                 if (___navigator == null) return true;
-                if (!MyGrid.IsHypotenuse(Grid.PosToCell(___navigator))) return true;
+                int cell = Grid.PosToCell(___navigator);
+                if (!Grid.IsValidCell(cell)) return true;
+                if (!MyGrid.IsHypotenuse(cell)) return true;
                 MyTransitionLayer layer = (MyTransitionLayer)___navigator.transitionDriver.overrideLayers.Find(x => x.GetType() == typeof(MyTransitionLayer));
                 if (layer == null || !layer.isMovingOnStaris) return true;
                 return false;
@@ -205,7 +207,9 @@ namespace Stairs
             public static bool Prefix(Navigator ___navigator)
             {
                 if (___navigator == null) return true;
-                if (!MyGrid.IsHypotenuse(Grid.PosToCell(___navigator))) return true;
+                int cell = Grid.PosToCell(___navigator);
+                if (!Grid.IsValidCell(cell)) return true;
+                if (!MyGrid.IsHypotenuse(cell)) return true;
                 MyTransitionLayer layer = (MyTransitionLayer)___navigator.transitionDriver.overrideLayers.Find(x => x.GetType() == typeof(MyTransitionLayer));
                 if (layer == null || !layer.isMovingOnStaris) return true;
                 return false;
