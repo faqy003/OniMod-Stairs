@@ -2,7 +2,10 @@
 using KMod;
 using STRINGS;
 using UnityEngine;
+using System;
 using System.IO;
+using static AmbienceManager;
+using static Grid.Restriction;
 
 namespace Stairs
 {
@@ -217,8 +220,10 @@ namespace Stairs
         }
 
         // 建筑摆放判定
-        [HarmonyPatch(typeof(BuildingDef))]
-        [HarmonyPatch("IsAreaClear")]
+        // [Game Hotfix] - 597172 - IsAreaClear have now two overloaded versions, patch the new method with restrictToActiveWorld
+        [HarmonyPatch(typeof(BuildingDef), "IsAreaClear")]
+        [HarmonyPatch(new Type[] { typeof(GameObject), typeof(int), typeof(Orientation), typeof(ObjectLayer), typeof(ObjectLayer), typeof(bool), typeof(bool), typeof(string) },
+            new ArgumentType[] { ArgumentType.Normal, ArgumentType.Normal, ArgumentType.Normal, ArgumentType.Normal, ArgumentType.Normal, ArgumentType.Normal, ArgumentType.Normal, ArgumentType.Out })]
         public static class BuildingDef_IsAreaClear_Patch
         {
             private static bool IsScaffolding(GameObject go)
@@ -262,7 +267,7 @@ namespace Stairs
                 }
                 return false;
             }
-            public static void Postfix(BuildingDef __instance, ref bool __result, GameObject source_go, int cell, Orientation orientation, ObjectLayer layer, ObjectLayer tile_layer, bool replace_tile, ref string fail_reason)
+            public static void Postfix(BuildingDef __instance, ref bool __result, GameObject source_go, int cell, Orientation orientation, ObjectLayer layer, ObjectLayer tile_layer, bool replace_tile, bool restrictToActiveWorld, ref string fail_reason)
             {
                 if (!__result) return;
                 //GameObject go_c = source_go.GetComponent<BuildingPreview>().Def.BuildingComplete;
