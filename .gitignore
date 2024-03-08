@@ -340,3 +340,5 @@ ASALocalRun/
 healthchecksdb
 /lib
 /lib-vanilla
+/Stairs/Stairs.csproj
+/Stairs/packages.config
