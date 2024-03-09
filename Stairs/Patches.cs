@@ -3,6 +3,9 @@ using KMod;
 using STRINGS;
 using UnityEngine;
 using System.IO;
+using System;
+using static AmbienceManager;
+using static Grid.Restriction;
 
 namespace Stairs
 {
@@ -218,7 +221,8 @@ namespace Stairs
 
         // 建筑摆放判定
         [HarmonyPatch(typeof(BuildingDef))]
-        [HarmonyPatch("IsAreaClear")]
+        [HarmonyPatch("IsAreaClear", new Type[] { typeof(GameObject), typeof(int), typeof(Orientation), typeof(ObjectLayer), typeof(ObjectLayer), typeof(bool), typeof(bool), typeof(string) },
+            new ArgumentType[] { ArgumentType.Normal, ArgumentType.Normal, ArgumentType.Normal, ArgumentType.Normal, ArgumentType.Normal, ArgumentType.Normal, ArgumentType.Normal, ArgumentType.Out })]
         public static class BuildingDef_IsAreaClear_Patch
         {
             private static bool IsScaffolding(GameObject go)
@@ -262,7 +266,7 @@ namespace Stairs
                 }
                 return false;
             }
-            public static void Postfix(BuildingDef __instance, ref bool __result, GameObject source_go, int cell, Orientation orientation, ObjectLayer layer, ObjectLayer tile_layer, bool replace_tile, ref string fail_reason)
+            public static void Postfix(BuildingDef __instance, ref bool __result, GameObject source_go, int cell, Orientation orientation, ObjectLayer layer, ObjectLayer tile_layer, bool replace_tile, bool restrictToActiveWorld, ref string fail_reason)
             {
                 if (!__result) return;
                 //GameObject go_c = source_go.GetComponent<BuildingPreview>().Def.BuildingComplete;
