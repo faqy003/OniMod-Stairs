@@ -131,10 +131,7 @@ namespace Stairs
             {
                 BUILDINGS.CONSTRUCTION_MASS_KG.TIER2[0],
             };
-            string[] construction_materials = new string[]
-            {
-                MATERIALS.BUILDABLERAW,
-            };
+            string[] construction_materials = MATERIALS.RAW_MINERALS_OR_WOOD;
 
             var buildingDef = BuidingTemplates.CreateScaffoldingDef(ID, "scaffolding_alt1_kanim", construction_mass, construction_materials);
             buildingDef.BaseDecor = 0f;
@@ -223,7 +220,7 @@ namespace Stairs
             };
             string[] construction_materials = new string[]
             {
-                MATERIALS.BUILDABLERAW,
+                MATERIALS.RAW_MINERALS_OR_WOOD[0],
                 MATERIALS.METAL
             };
 

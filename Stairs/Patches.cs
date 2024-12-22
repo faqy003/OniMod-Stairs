@@ -86,6 +86,8 @@ namespace Stairs
 
             sPath = path;
             LoadStrings(Path.Combine(path, "loc/stairs_template.pot"), true);
+
+            MinionConfig_Patch.ApplyPatchas(harmony);
         }
 
         private static void AddBuildingToTechnology(Db db, string tech, string buildingId)
@@ -164,8 +166,6 @@ namespace Stairs
 
         // ------------- 补丁 -----------------
         //添加OverrideLayer
-        [HarmonyPatch(typeof(MinionConfig))]
-        [HarmonyPatch("OnSpawn")]
         public static class MinionConfig_Patch
         {
             public static void Postfix(GameObject go)
@@ -173,7 +173,13 @@ namespace Stairs
                 Navigator navigator = go.GetComponent<Navigator>();
                 navigator.transitionDriver.overrideLayers.Add(new MyTransitionLayer(navigator));
             }
+            public static void ApplyPatchas(Harmony harmony)
+            {
+                harmony.Patch(typeof(MinionConfig).GetMethod("OnSpawn"), new HarmonyMethod(typeof(MinionConfig_Patch).GetMethod("Postfix")));
+                harmony.Patch(typeof(BionicMinionConfig).GetMethod("OnSpawn"), new HarmonyMethod(typeof(MinionConfig_Patch).GetMethod("Postfix")));
+            }
         }
+
         [HarmonyPatch(typeof(ScoutRoverConfig))]
         [HarmonyPatch("OnSpawn")]
         public static class ScoutRoverConfig_Patch
@@ -493,8 +499,8 @@ namespace Stairs
             public static bool Prefix(Navigator ___navigator, ref bool __result, ref PathFinder.PotentialPath path, int from_cell, NavType from_nav_type, int cost, int transition_id, bool submerged)
             {
                 if (___navigator.NavGridName != "RobotNavGrid") return true;
-                __result = false;
-                return PathFilter( ref path, from_cell, from_nav_type, ___navigator);
+                    __result = false;
+                    return PathFilter( ref path, from_cell, from_nav_type, ___navigator);
             }
         }
 
