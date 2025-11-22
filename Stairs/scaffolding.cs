@@ -25,7 +25,7 @@ namespace Stairs
             {
                 buildingEnabled = value;
                 Game.Instance.userMenu.Refresh(gameObject);
-                Trigger((int)GameHashes.PowerStatusChanged, buildingEnabled);
+                BoxingTrigger((int)GameHashes.PowerStatusChanged, buildingEnabled);
                 UpdateState();
             }
         }

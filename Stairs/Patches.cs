@@ -1,9 +1,10 @@
 ﻿using HarmonyLib;
 using KMod;
 using STRINGS;
-using UnityEngine;
-using System.IO;
 using System;
+using System.Collections.Generic;
+using System.IO;
+using UnityEngine;
 using static AmbienceManager;
 using static Grid.Restriction;
 
@@ -209,26 +210,27 @@ namespace Stairs
         }
 
         //路径感知修正
-        [HarmonyPatch(typeof(Navigator.PathProbeTask))]
-        [HarmonyPatch("Update")]
+        [HarmonyPatch(typeof(AsyncPathProber.Manager))]
+        [HarmonyPatch("NextTask")]
         public class PathProbeTask_Patch
         {
-            public static bool Prefix(Navigator ___navigator)
+            public static void Postfix(ref bool __result,Navigator.AsyncPathGridUpdaterEntry entry)
             {
-                if (___navigator == null) return true;
-                int cell = Grid.PosToCell(___navigator);
-                if (!Grid.IsValidCell(cell)) return true;
-                if (!MyGrid.IsHypotenuse(cell)) return true;
-                MyTransitionLayer layer = (MyTransitionLayer)___navigator.transitionDriver.overrideLayers.Find(x => x.GetType() == typeof(MyTransitionLayer));
-                if (layer == null || !layer.isMovingOnStaris) return true;
-                return false;
+                if (!__result) return;
+                if (entry.navigator == null) return;
+                int cell = Grid.PosToCell(entry.navigator);
+                if (!Grid.IsValidCell(cell)) return;
+                if (!MyGrid.IsHypotenuse(cell)) return;
+                MyTransitionLayer layer = (MyTransitionLayer)entry.navigator.transitionDriver.overrideLayers.Find(x => x.GetType() == typeof(MyTransitionLayer));
+                if (layer == null || !layer.isMovingOnStaris) return;
+                __result= false;
             }
         }
 
         // 建筑摆放判定
         [HarmonyPatch(typeof(BuildingDef))]
-        [HarmonyPatch("IsAreaClear", new Type[] { typeof(GameObject), typeof(int), typeof(Orientation), typeof(ObjectLayer), typeof(ObjectLayer), typeof(bool), typeof(bool), typeof(string) },
-            new ArgumentType[] { ArgumentType.Normal, ArgumentType.Normal, ArgumentType.Normal, ArgumentType.Normal, ArgumentType.Normal, ArgumentType.Normal, ArgumentType.Normal, ArgumentType.Out })]
+        [HarmonyPatch("IsAreaClear", new Type[] { typeof(GameObject), typeof(int), typeof(Orientation), typeof(ObjectLayer), typeof(ObjectLayer), typeof(bool), typeof(bool), typeof(string) ,typeof(bool)},
+            new ArgumentType[] { ArgumentType.Normal, ArgumentType.Normal, ArgumentType.Normal, ArgumentType.Normal, ArgumentType.Normal, ArgumentType.Normal, ArgumentType.Normal, ArgumentType.Out ,ArgumentType.Normal})]
         public static class BuildingDef_IsAreaClear_Patch
         {
             private static bool IsScaffolding(GameObject go)
@@ -272,7 +274,7 @@ namespace Stairs
                 }
                 return false;
             }
-            public static void Postfix(BuildingDef __instance, ref bool __result, GameObject source_go, int cell, Orientation orientation, ObjectLayer layer, ObjectLayer tile_layer, bool replace_tile, bool restrictToActiveWorld, ref string fail_reason)
+            public static void Postfix(BuildingDef __instance, ref bool __result, GameObject source_go, int cell, Orientation orientation, ObjectLayer layer, ObjectLayer tile_layer, bool replace_tile, bool restrictToActiveWorld, ref string fail_reason, bool permitUproots)
             {
                 if (!__result) return;
                 //GameObject go_c = source_go.GetComponent<BuildingPreview>().Def.BuildingComplete;
@@ -572,7 +574,7 @@ namespace Stairs
                 if (component != null)
                 {
                     if (damage < 0) damage = component.MaxHitPoints;
-                    component.gameObject.Trigger((int)GameHashes.DoBuildingDamage, new BuildingHP.DamageSourceInfo
+                    component.gameObject.BoxingTrigger((int)GameHashes.DoBuildingDamage, new BuildingHP.DamageSourceInfo
                     {
                         damage = damage,
                         source = source,
