@@ -214,7 +214,7 @@ namespace Stairs
         [HarmonyPatch("NextTask")]
         public class PathProbeTask_Patch
         {
-            public static void Postfix(ref bool __result,Navigator.AsyncPathGridUpdaterEntry entry)
+            public static void Postfix(ref bool __result,AsyncPathProber.Manager __instance, Navigator.AsyncPathGridUpdaterEntry entry)
             {
                 if (!__result) return;
                 if (entry.navigator == null) return;
@@ -223,7 +223,8 @@ namespace Stairs
                 if (!MyGrid.IsHypotenuse(cell)) return;
                 MyTransitionLayer layer = (MyTransitionLayer)entry.navigator.transitionDriver.overrideLayers.Find(x => x.GetType() == typeof(MyTransitionLayer));
                 if (layer == null || !layer.isMovingOnStaris) return;
-                __result= false;
+                __instance.TaskComplete(entry);
+                __result = false;
             }
         }
 
