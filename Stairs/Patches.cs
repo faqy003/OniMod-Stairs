@@ -214,17 +214,22 @@ namespace Stairs
         [HarmonyPatch("NextTask")]
         public class PathProbeTask_Patch
         {
-            public static void Postfix(ref bool __result,AsyncPathProber.Manager __instance, Navigator.AsyncPathGridUpdaterEntry entry)
+            public static bool Prefix(List<AsyncPathProber.WorkOrder> ___workQueue, ref bool __result, AsyncPathProber.Manager __instance)
             {
-                if (!__result) return;
-                if (entry.navigator == null) return;
-                int cell = Grid.PosToCell(entry.navigator);
-                if (!Grid.IsValidCell(cell)) return;
-                if (!MyGrid.IsHypotenuse(cell)) return;
-                MyTransitionLayer layer = (MyTransitionLayer)entry.navigator.transitionDriver.overrideLayers.Find(x => x.GetType() == typeof(MyTransitionLayer));
-                if (layer == null || !layer.isMovingOnStaris) return;
-                __instance.TaskComplete(entry);
-                __result = false;
+                lock (__instance)
+                {
+                    if (___workQueue.Count == 0) return true;
+                    Navigator navigator = ___workQueue[___workQueue.Count - 1].navigator;
+                    if (navigator == null) return true;
+                    int cell = Grid.PosToCell(navigator);
+                    if (!Grid.IsValidCell(cell)) return true;
+                    if (!MyGrid.IsHypotenuse(cell)) return true;
+                    MyTransitionLayer layer = (MyTransitionLayer)navigator.transitionDriver.overrideLayers.Find(x => x.GetType() == typeof(MyTransitionLayer));
+                    if (layer == null || !layer.isMovingOnStaris) return true;
+                    ___workQueue.RemoveAt(___workQueue.Count - 1);
+                    __result = false;
+                    return false;
+                }
             }
         }
 
