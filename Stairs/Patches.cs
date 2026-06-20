@@ -4,8 +4,11 @@ using STRINGS;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Reflection;
+using System.Reflection.Emit;
 using UnityEngine;
 using static AmbienceManager;
+using static Grid;
 using static Grid.Restriction;
 
 namespace Stairs
@@ -219,14 +222,14 @@ namespace Stairs
                 lock (__instance)
                 {
                     if (___workQueue.Count == 0) return true;
-                    Navigator navigator = ___workQueue[___workQueue.Count - 1].navigator;
+                    Navigator navigator = ___workQueue[0].navigator;
                     if (navigator == null) return true;
                     int cell = Grid.PosToCell(navigator);
                     if (!Grid.IsValidCell(cell)) return true;
                     if (!MyGrid.IsHypotenuse(cell)) return true;
                     MyTransitionLayer layer = (MyTransitionLayer)navigator.transitionDriver.overrideLayers.Find(x => x.GetType() == typeof(MyTransitionLayer));
                     if (layer == null || !layer.isMovingOnStaris) return true;
-                    ___workQueue.RemoveAt(___workQueue.Count - 1);
+                    ___workQueue.RemoveAt(0);
                     __result = false;
                     return false;
                 }
@@ -310,6 +313,32 @@ namespace Stairs
                     }
                 }
                 if (!__result) fail_reason = UI.TOOLTIPS.HELP_BUILDLOCATION_OCCUPIED;
+            }
+            public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
+            {
+                var cm = new CodeMatcher(instructions)
+                    .MatchStartForward(
+                        new CodeMatch(OpCodes.Ldsflda),
+                        new CodeMatch(OpCodes.Ldloc_3),
+                        new CodeMatch(OpCodes.Ldc_I4_S, (sbyte)ObjectLayer.AttachableBuilding),
+                        new CodeMatch(OpCodes.Call)
+                    );
+                if (cm.IsInvalid){
+                    Debug.Log("no match @BuildingDef_IsAreaClear_Patch");
+                    return instructions;
+                }
+                return cm.Advance(1)
+                    .RemoveInstructions(3)
+                    .Insert(new CodeInstruction(OpCodes.Pop),
+                    new CodeInstruction(OpCodes.Ldloc_3),
+                    new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(BuildingDef_IsAreaClear_Patch), nameof(ICall))))
+                    .InstructionEnumeration();
+            }
+            public static GameObject ICall(int cell)
+            {
+                var go = Grid.Objects[cell, (int)ObjectLayer.AttachableBuilding];
+                if (IsScaffolding(go)) return null;
+                return go;
             }
         }
 
