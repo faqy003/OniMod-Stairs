@@ -268,7 +268,7 @@ namespace Stairs
             string[] construction_materials = new string[]
             {
                 MATERIALS.REFINED_METAL,
-                MATERIALS.GLASS
+                MATERIALS.ALL_GLASSES
             };
             var buildingDef = BuidingTemplates.CreateStairsDef(ID, "stairs_alt1_kanim", construction_mass, construction_materials);
             buildingDef.BaseDecor = 8f;

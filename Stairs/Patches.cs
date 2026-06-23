@@ -393,7 +393,8 @@ namespace Stairs
         // 寻路限制
         public static bool PathFilter(ref PathFinder.PotentialPath path, int from_cell, NavType from_nav_type, Navigator navigator)
         {
-            if (path.navType != NavType.Floor || from_nav_type != NavType.Floor) return true;
+            if (!(from_nav_type == NavType.Floor || (path.navType == NavType.Floor && from_nav_type == NavType.Swim)) ||
+                !(path.navType == NavType.Floor || (path.navType == NavType.Swim && from_nav_type == NavType.Floor))) return true;
 
             int targetCell = path.cell;
             CellOffset offset = Grid.GetOffset(from_cell, targetCell);
@@ -404,6 +405,7 @@ namespace Stairs
             int f_b = Grid.CellBelow(from_cell);
             if (offset.y == 1)
             {
+                if(from_nav_type == NavType.Swim) return true;
                 if (MyGrid.IsHypotenuse(c_b))
                 {
                     if (offset.x == 1)
@@ -417,6 +419,7 @@ namespace Stairs
                 }
             }
             else if (offset.y == -1) {
+                if (path.navType == NavType.Swim) return true;
                 if (MyGrid.IsHypotenuse(f_b))
                 {
                     //if (!MyGrid.IsHypotenuse(targetCell) && MyGrid.IsWalkable(targetCell)) return false;
@@ -529,15 +532,15 @@ namespace Stairs
             return true;
         }
 
-        [HarmonyPatch(typeof(CreaturePathFinderAbilities))]
+        [HarmonyPatch(typeof(RobotPathFinderAbilities))]
         [HarmonyPatch("TraversePath")]
-        public static class CreatureTraversePath_Patch
+        public static class RobotPathFinderAbilities_Patch
         {
             public static bool Prefix(Navigator ___navigator, ref bool __result, ref PathFinder.PotentialPath path, int from_cell, NavType from_nav_type, int cost, int transition_id, bool submerged)
             {
                 if (___navigator.NavGridName != "RobotNavGrid") return true;
-                    __result = false;
-                    return PathFilter( ref path, from_cell, from_nav_type, ___navigator);
+                __result = false;
+                return PathFilter( ref path, from_cell, from_nav_type, ___navigator);
             }
         }
 

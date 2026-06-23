@@ -72,6 +72,7 @@ namespace Stairs
             {
                 GetComponent<BuildingHP>().invincible = true;
             }
+            GetComponent<Deconstructable>().SetWorkTime(1f);
         }
         protected override void OnCleanUp()
         {
