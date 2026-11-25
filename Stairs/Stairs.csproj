@@ -1,69 +1,131 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  双目标工程：net48 + netstandard2.1
+
+  net48         保持原样，transpiler 走 CodeMatcher 实现（见 Patches.cs 的 #else 分支）。
+                游戏 Loader 用 Assembly.LoadFrom 加载，net48 产物与旧版完全一致，可随时回退。
+  netstandard2.1 与游戏本体（Unity Mono，104/136 个 dll 引用 netstandard 2.1.0.0）同构，
+                transpiler 走 List 手写扫描实现（见 Patches.cs 的 #if NETSTANDARD2_1 分支），
+                因为 CodeMatcher 的 ctor 签名含 ILGenerator，在 netstandard2.1 下会报 CS7069。
+
+  变更要点（相对旧式非 SDK 工程）：
+    1. 改为 SDK 风格工程（老式工程缺 NETStandard 导入，无法改成 netstandard 目标）。
+    2. GenerateAssemblyInfo=false，避免与 Properties\AssemblyInfo.cs 重复（CS0579）。
+    3. EnableDefaultItems=false，源码与资源清单全部显式维护。既避免与通配符重复（NETSDK1022），也避免 Stairs\bin\ 下的旧游戏 DLL 被通配成 CandidateAssemblyFiles 而抢先于 HintPath 解析。
+    4. 删除 System / System.Core / System.Runtime.InteropServices.RuntimeInformation 三条引用
+       （netstandard2.1 下会报 MSB3245 + MSB3243；源码本身也未使用）。
+    5. PostBuildEvent 改为 AfterTargets="Build" 的 Copy Target：
+       SDK 工程的 PostBuildEvent 里 $(TargetPath) 等属性展开为空，会静默失败。
+       为免两个 TFM 互相覆盖部署目录，默认只部署 netstandard2.1，
+       可通过 /p:DeployTargetFramework=net48 切换。
+-->
+<Project Sdk="Microsoft.NET.Sdk">
+
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{1280A1EF-E563-4258-939A-DA7D21A6E9AC}</ProjectGuid>
+    <TargetFrameworks>netstandard2.1</TargetFrameworks>
     <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Stairs</RootNamespace>
     <AssemblyName>Stairs</AssemblyName>
-    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
+    <ProjectGuid>{1280A1EF-E563-4258-939A-DA7D21A6E9AC}</ProjectGuid>
     <Deterministic>true</Deterministic>
-    <TargetFrameworkProfile />
-    <NuGetPackageImportStamp>
-    </NuGetPackageImportStamp>
+    <LangVersion>8.0</LangVersion>
   </PropertyGroup>
+
+  <!-- 不要输出 deps.json / ref 引用程序集，保持部署目录只有 dll + pdb -->
+  <PropertyGroup>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GenerateDependencyFile>false</GenerateDependencyFile>
+    <ProduceReferenceAssembly>false</ProduceReferenceAssembly>
+  </PropertyGroup>
+
+  <!--
+    关闭 SDK 的默认通配收集，本项目所有源文件/资源都在下方显式列出。
+    原因：SDK 默认用通配符收集 None/Content，这些项会被 MSBuild 当作
+    CandidateAssemblyFiles 参与引用解析，优先级高于 HintPath。
+    Stairs\bin\ 下遗留的旧游戏 DLL（旧式工程时代的产物）因此可能抢先被解析，
+    导致引用到旧版 Assembly-CSharp（缺 AsyncPathProber / RobotPathFinderAbilities
+    等新类型）而报 error CS0246。
+  -->
+  <PropertyGroup>
+    <EnableDefaultItems>false</EnableDefaultItems>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <DefaultItemExcludes>$(DefaultItemExcludes);bin\**;obj\**</DefaultItemExcludes>
+  </PropertyGroup>
+
+  <!-- 部署到本地 mod 目录的 TFM；两个目标都构建时只复制这一个，避免互相覆盖 -->
+  <PropertyGroup>
+    <DeployTargetFramework Condition="'$(DeployTargetFramework)' == ''">netstandard2.1</DeployTargetFramework>
+    <ModFolder Condition="'$(ModFolder)' == ''">K:\My Documents\Klei\OxygenNotIncluded\mods\dev\Stairs</ModFolder>
+  </PropertyGroup>
+
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
+
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
     <DefineConstants>TRACE;VANILLA</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
+
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release-DLC1|AnyCPU'">
-    <OutputPath>bin\Release-DLC1\</OutputPath>
     <DefineConstants>TRACE;DLC1</DefineConstants>
     <Optimize>true</Optimize>
     <DebugType>pdbonly</DebugType>
     <PlatformTarget>AnyCPU</PlatformTarget>
-    <LangVersion>7.3</LangVersion>
-    <ErrorReport>prompt</ErrorReport>
   </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
+    <PlatformTarget>x64</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
+    <PlatformTarget>x64</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <DefineConstants>TRACE;VANILLA</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release-DLC1|x64'">
+    <PlatformTarget>x64</PlatformTarget>
+    <DefineConstants>TRACE;DLC1</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+  </PropertyGroup>
+
   <ItemGroup>
+    <!-- 游戏程序集：不复制到输出目录，运行时由游戏加载 -->
     <Reference Include="0Harmony">
       <HintPath>..\lib\0Harmony.dll</HintPath>
+      <Private>false</Private>
     </Reference>
     <Reference Include="Assembly-CSharp">
       <HintPath>..\lib\Assembly-CSharp.dll</HintPath>
+      <Private>false</Private>
     </Reference>
     <Reference Include="Assembly-CSharp-firstpass">
       <HintPath>..\lib\Assembly-CSharp-firstpass.dll</HintPath>
+      <Private>false</Private>
     </Reference>
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Runtime.InteropServices.RuntimeInformation" />
     <Reference Include="UnityEngine">
       <HintPath>..\lib\UnityEngine.dll</HintPath>
+      <Private>false</Private>
     </Reference>
     <Reference Include="UnityEngine.CoreModule">
       <HintPath>..\lib\UnityEngine.CoreModule.dll</HintPath>
+      <Private>false</Private>
     </Reference>
   </ItemGroup>
+
   <ItemGroup>
     <Compile Include="config.cs" />
     <Compile Include="MyTransitionLayer.cs" />
@@ -72,6 +134,7 @@
     <Compile Include="scaffolding.cs" />
     <Compile Include="Stair.cs" />
   </ItemGroup>
+
   <ItemGroup>
     <None Include="anim\assets\scaffolding\scaffolding_anim.bytes" />
     <None Include="anim\assets\scaffolding\scaffolding_build.bytes" />
@@ -88,6 +151,7 @@
     <None Include="loc\stairs_template.pot" />
     <None Include="loc\zh.po" />
   </ItemGroup>
+
   <ItemGroup>
     <Content Include="anim\assets\scaffolding\scaffolding.png" />
     <Content Include="anim\assets\scaffolding_alt1\scaffolding_alt1.png" />
@@ -96,8 +160,16 @@
     <Content Include="anim\assets\stairs_alt1\stairs_alt.png" />
     <Content Include="anim\assets\stairs_classic\stairs_classic.png" />
   </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <PropertyGroup>
-    <PostBuildEvent>COPY /Y "$(TargetPath)" "K:\My Documents\Klei\OxygenNotIncluded\mods\dev\Stairs"</PostBuildEvent>
-  </PropertyGroup>
+
+  <!--
+    替代旧的 PostBuildEvent（COPY /Y "$(TargetPath)" ...）。
+    SDK 工程的 PostBuildEvent 内 $(TargetPath)/$(TargetDir)/$(OutDir) 等均为空，
+    改用 Target 后这些属性正常展开。
+    条件用于保证双目标构建时只部署其中一个 TFM，避免两个产物互相覆盖。
+  -->
+  <Target Name="CopyToModFolder" AfterTargets="Build" Condition="'$(TargetFramework)' == '$(DeployTargetFramework)'">
+    <MakeDir Directories="$(ModFolder)" />
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(ModFolder)" />
+  </Target>
+
 </Project>

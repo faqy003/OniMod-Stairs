@@ -13,7 +13,7 @@ namespace Stairs
         protected override void OnPrefabInit()
         {
             base.OnPrefabInit();
-            Subscribe((int)GameHashes.RefreshUserMenu, OnRefreshUserMenuDelegate);
+            Subscribe((int)GameHashes.RefreshUserMenu, OnRefreshUserMenuDelegate,this);
         }
         public bool IsEnabled
         {
@@ -65,8 +65,8 @@ namespace Stairs
             base.OnSpawn();
             GetComponent<KSelectable>().SetStatusItem(Db.Get().StatusItemCategories.Main, Db.Get().BuildingStatusItems.Normal, null);
             IsEnabled = buildingEnabled;
-            Subscribe((int)GameHashes.BuildingBroken, OnBuildingBrokenDelegate);
-            Subscribe((int)GameHashes.BuildingFullyRepaired, OnBuildingFullyRepairedDelegate);
+            Subscribe((int)GameHashes.BuildingBroken, OnBuildingBrokenDelegate,this);
+            Subscribe((int)GameHashes.BuildingFullyRepaired, OnBuildingFullyRepairedDelegate,this);
             PrimaryElement primary_element = GetComponent<PrimaryElement>();
             if (primary_element.ElementID == SimHashes.Steel && this.PrefabID() == Patches.tag_ScaffoldingAlt2)
             {
@@ -76,8 +76,8 @@ namespace Stairs
         }
         protected override void OnCleanUp()
         {
-            Unsubscribe((int)GameHashes.BuildingBroken, OnBuildingBrokenDelegate, false);
-            Unsubscribe((int)GameHashes.BuildingFullyRepaired, OnBuildingFullyRepairedDelegate, false);
+            //Unsubscribe((int)GameHashes.BuildingBroken, OnBuildingBrokenDelegate, false);
+            //Unsubscribe((int)GameHashes.BuildingFullyRepaired, OnBuildingFullyRepairedDelegate, false);
             base.OnCleanUp();
             int cell = Grid.PosToCell(this);
             MyGrid.Masks[cell] &= ~MyGrid.Flags.HasScaffolding;
@@ -93,21 +93,19 @@ namespace Stairs
                 }
             }
         }
-        public List<Descriptor> GetDescriptors(GameObject go)
+        public void CollectDescriptors(GameObject go, List<Descriptor> descriptors)
         {
-            List<Descriptor> list = null;
             if (go.PrefabID() == Patches.tag_ScaffoldingAlt2)
             {
-                list = new List<Descriptor>();
                 Descriptor descriptor = default;
                 descriptor.SetupDescriptor(string.Format(UI.BUILDINGEFFECTS.DUPLICANTMOVEMENTBOOST,
                     GameUtil.AddPositiveSign(GameUtil.GetFormattedPercent(MyTransitionLayer.scaffoldingSpeedMultiplier * 100f - 100f),
                     MyTransitionLayer.scaffoldingSpeedMultiplier - 1f >= 0f)), string.Format(UI.BUILDINGEFFECTS.TOOLTIPS.DUPLICANTMOVEMENTBOOST,
                     GameUtil.GetFormattedPercent(MyTransitionLayer.scaffoldingSpeedMultiplier * 100f - 100f)), Descriptor.DescriptorType.Effect);
-                list.Add(descriptor);
+                descriptors.Add(descriptor);
             }
-            return list;
         }
+
         private void OnBuildingBroken(object data)
         {
             UpdateState();
@@ -117,20 +115,20 @@ namespace Stairs
             UpdateState();
         }
 
-        private static readonly EventSystem.IntraObjectHandler<Scaffolding> OnBuildingBrokenDelegate = new EventSystem.IntraObjectHandler<Scaffolding>(delegate (Scaffolding component, object data)
+        private static readonly Action<object, object> OnBuildingBrokenDelegate = delegate (object context, object data)
         {
-            component.OnBuildingBroken(data);
-        });
+            ((Scaffolding)context).OnBuildingBroken(data);
+        };
 
-        private static readonly EventSystem.IntraObjectHandler<Scaffolding> OnBuildingFullyRepairedDelegate = new EventSystem.IntraObjectHandler<Scaffolding>(delegate (Scaffolding component, object data)
+        private static readonly Action<object, object> OnBuildingFullyRepairedDelegate = delegate (object context, object data)
         {
-            component.OnBuildingFullyRepaired(data);
-        });
+            ((Scaffolding)context).OnBuildingFullyRepaired(data);
+        };
 
-        private static readonly EventSystem.IntraObjectHandler<Scaffolding> OnRefreshUserMenuDelegate = new EventSystem.IntraObjectHandler<Scaffolding>(delegate (Scaffolding component, object data)
+        private static readonly Action<object, object> OnRefreshUserMenuDelegate = delegate (object context, object data)
         {
-            component.OnRefreshUserMenu(data);
-        });
+            ((Scaffolding)context).OnRefreshUserMenu(data);
+        };
 
         [Serialize]
         private bool buildingEnabled = true;

@@ -1,4 +1,4 @@
-﻿using HarmonyLib;
+using HarmonyLib;
 using KMod;
 using STRINGS;
 using System;
@@ -56,6 +56,7 @@ namespace Stairs
             if ((Masks[cell] & Flags.Hypotenuse) == 0) return false;
             return true;
         }
+
         public enum Flags : byte
         {
             HasStair = 1,
@@ -99,6 +100,18 @@ namespace Stairs
             Tech t = db.Techs.TryGet(tech);
             if (t == null) return;
             t.unlockedItemIDs.Add(buildingId);
+        }
+
+        private static MyTransitionLayer GetTransitionLayer(Navigator navigator)
+        {
+            if (navigator == null || navigator.transitionDriver == null) return null;
+            List<TransitionDriver.OverrideLayer> layers = navigator.transitionDriver.overrideLayers;
+            for (int i = 0; i < layers.Count; i++)
+            {
+                MyTransitionLayer layer = layers[i] as MyTransitionLayer;
+                if (layer != null) return layer;
+            }
+            return null;
         }
 
         // ------------- 初始化 -----------------
@@ -206,34 +219,72 @@ namespace Stairs
                 int cell = Grid.PosToCell(___navigator);
                 if (!Grid.IsValidCell(cell)) return true;
                 if (!MyGrid.IsHypotenuse(cell)) return true;
-                MyTransitionLayer layer = (MyTransitionLayer)___navigator.transitionDriver.overrideLayers.Find(x => x.GetType() == typeof(MyTransitionLayer));
+                MyTransitionLayer layer = GetTransitionLayer(___navigator);
                 if (layer == null || !layer.isMovingOnStaris) return true;
                 return false;
             }
         }
 
-        //路径感知修正
         [HarmonyPatch(typeof(AsyncPathProber.Manager))]
-        [HarmonyPatch("NextTask")]
-        public class PathProbeTask_Patch
+        [HarmonyPatch("makeWorkOrder")]
+        public class PathProbeWorkOrder_Patch
         {
-            public static bool Prefix(List<AsyncPathProber.WorkOrder> ___workQueue, ref bool __result, AsyncPathProber.Manager __instance)
+            public static void Postfix(Navigator nav, ref AsyncPathProber.WorkOrder __result)
             {
-                lock (__instance)
-                {
-                    if (___workQueue.Count == 0) return true;
-                    Navigator navigator = ___workQueue[0].navigator;
-                    if (navigator == null) return true;
-                    int cell = Grid.PosToCell(navigator);
-                    if (!Grid.IsValidCell(cell)) return true;
-                    if (!MyGrid.IsHypotenuse(cell)) return true;
-                    MyTransitionLayer layer = (MyTransitionLayer)navigator.transitionDriver.overrideLayers.Find(x => x.GetType() == typeof(MyTransitionLayer));
-                    if (layer == null || !layer.isMovingOnStaris) return true;
-                    ___workQueue.RemoveAt(0);
-                    __result = false;
-                    return false;
-                }
+                MyTransitionLayer layer = GetTransitionLayer(nav);
+                if (layer == null || !layer.isMovingOnStaris) return;
+                if (!Grid.IsValidCell(layer.transitionOriginCell)) return;
+                if (MyGrid.Masks == null || MyGrid.IsHypotenuse(layer.transitionOriginCell)) return;
+
+                __result.originCell = layer.transitionOriginCell;
             }
+        }
+
+        [HarmonyPatch(typeof(Navigator))]
+        [HarmonyPatch("Stop", new Type[] { typeof(bool), typeof(bool) })]
+        public static class Navigator_Stop_StairTransition_Patch
+        {
+            public static bool Prefix(Navigator __instance, bool arrived_at_destination, bool play_idle, ref bool __result)
+            {
+                MyTransitionLayer layer = GetTransitionLayer(__instance);
+                if (layer == null || !layer.DeferStop(__instance, arrived_at_destination, play_idle)) return true;
+                __result = true;
+                return false;
+            }
+        }
+
+        [HarmonyPatch(typeof(Navigator))]
+        [HarmonyPatch("SimEveryTick")]
+        public static class Navigator_SimEveryTick_StairTransition_Patch
+        {
+            public static void Postfix(Navigator __instance)
+            {
+                MyTransitionLayer layer = GetTransitionLayer(__instance);
+                if (layer == null || !layer.TryTakePendingStop(out bool arrived, out bool playIdle)) return;
+
+                __instance.Stop(arrived, playIdle);
+            }
+        }
+
+        [HarmonyPatch(typeof(Navigator))]
+        [HarmonyPatch("OnDefeated")]
+        public static class Navigator_OnDefeated_StairTransition_Patch
+        {
+            public static void Prefix(Navigator __instance)
+            {
+                SetForcedStop(__instance, true);
+            }
+
+            public static void Postfix(Navigator __instance)
+            {
+                SetForcedStop(__instance, false);
+            }
+        }
+
+        private static void SetForcedStop(Navigator navigator, bool value)
+        {
+            MyTransitionLayer layer = GetTransitionLayer(navigator);
+            if (layer != null) layer.allowForcedStop = value;
         }
 
         // 建筑摆放判定
@@ -314,25 +365,35 @@ namespace Stairs
                 }
                 if (!__result) fail_reason = UI.TOOLTIPS.HELP_BUILDLOCATION_OCCUPIED;
             }
+
+            // netstandard2.1 版：等价的 List 手写扫描实现，避免 CodeMatcher 构造函数依赖 ILGenerator。
             public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
             {
-                var cm = new CodeMatcher(instructions)
-                    .MatchStartForward(
-                        new CodeMatch(OpCodes.Ldsflda),
-                        new CodeMatch(OpCodes.Ldloc_3),
-                        new CodeMatch(OpCodes.Ldc_I4_S, (sbyte)ObjectLayer.AttachableBuilding),
-                        new CodeMatch(OpCodes.Call)
-                    );
-                if (cm.IsInvalid){
+                var instrList = new List<CodeInstruction>(instructions);
+                int idx = -1;
+                for (int i = 0; i < instrList.Count - 3; i++)
+                {
+                    if (instrList[i].opcode == OpCodes.Ldsflda &&
+                        instrList[i + 1].opcode == OpCodes.Ldloc_3 &&
+                        instrList[i + 2].opcode == OpCodes.Ldc_I4_S && (sbyte)instrList[i + 2].operand == (sbyte)ObjectLayer.AttachableBuilding &&
+                        instrList[i + 3].opcode == OpCodes.Call)
+                    {
+                        idx = i + 1;
+                        break;
+                    }
+                }
+                if (idx == -1)
+                {
                     Debug.Log("no match @BuildingDef_IsAreaClear_Patch");
                     return instructions;
                 }
-                return cm.Advance(1)
-                    .RemoveInstructions(3)
-                    .Insert(new CodeInstruction(OpCodes.Pop),
-                    new CodeInstruction(OpCodes.Ldloc_3),
-                    new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(BuildingDef_IsAreaClear_Patch), nameof(ICall))))
-                    .InstructionEnumeration();
+                // 删除3条指令
+                instrList.RemoveRange(idx, 3);
+                // 插入 pop, ldloc_3, call ICall
+                instrList.Insert(idx, new CodeInstruction(OpCodes.Pop));
+                instrList.Insert(idx + 1, new CodeInstruction(OpCodes.Ldloc_3));
+                instrList.Insert(idx + 2, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(BuildingDef_IsAreaClear_Patch), nameof(ICall))));
+                return instrList;
             }
             public static GameObject ICall(int cell)
             {
@@ -403,6 +464,7 @@ namespace Stairs
             if(offset.y == 0) return true;
             int c_b = Grid.CellBelow(targetCell);
             int f_b = Grid.CellBelow(from_cell);
+
             if (offset.y == 1)
             {
                 if(from_nav_type == NavType.Swim) return true;

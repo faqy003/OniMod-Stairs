@@ -1,4 +1,4 @@
-﻿using KSerialization;
+using KSerialization;
 using UnityEngine;
 
 namespace Stairs
@@ -12,7 +12,6 @@ namespace Stairs
         public MyTransitionLayer(Navigator navigator) : base(navigator)
         {
             //isMovingOnStaris = true;
-            time = Time.time;
         }
         public override void BeginTransition(Navigator navigator, Navigator.ActiveTransition transition)
         {
@@ -35,9 +34,11 @@ namespace Stairs
 
             if (transition.y != 1 && transition.y != -1) return;
             if (transition.x != 1 && transition.x != -1) return;
+
             int offset;
             if (transition.y > 0)
             {
+                // 向上：看同高度侧边那格是不是楼梯的"右接"侧
                 offset = Grid.OffsetCell(cell, transition.x, 0);
                 if (transition.x > 0)
                 {
@@ -50,6 +51,7 @@ namespace Stairs
             }
             else
             {
+                // 向下：看正下方那格是不是楼梯的"右接"侧
                 offset = Grid.OffsetCell(cell, 0, transition.y);
                 if (transition.x > 0)
                 {
@@ -76,65 +78,85 @@ namespace Stairs
             transition.isLooping = true;
             transition.anim = "floor_floor_1_0_loop";
             isMovingOnStaris = true;
-            time = Time.time;
-            int target_cell = Grid.OffsetCell(cell, transition.x, transition.y);
-            targetPos = Grid.CellToPosCBC(target_cell, navigator.sceneLayer);
+            transitionOriginCell = cell;
+            transitionHypotenuseCell = offset;
+            transitionTargetCell = Grid.OffsetCell(cell, transition.x, transition.y);
+            targetPos = Grid.CellToPosCBC(transitionTargetCell, navigator.sceneLayer);
             startPos = navigator.transform.GetPosition();
         }
-        //public override void UpdateTransition(Navigator navigator, Navigator.ActiveTransition transition)
-        //{
-        //    base.UpdateTransition(navigator, transition);
-        //    if (!isMovingOnStaris) return;
-        //    transition.isLooping = false;
-        //    Vector3 pos = navigator.transform.GetPosition();
-        //    float step = (Time.time - time) * transition.speed;
-        //    time = Time.time;
-
-        //    bool goUp = transition.y > 0;
-        //    bool goDown = transition.y < 0;
-        //    if (goUp)
-        //    {
-        //        pos.y += step;
-        //    }
-        //    else if (goDown)
-        //    {
-        //        pos.y -= step;
-        //    }
-        //    if (transition.x > 0)
-        //    {
-        //        pos.x += step;
-        //    }
-        //    else if (transition.x < 0)
-        //    {
-        //        pos.x -= step;
-        //    }
-
-        //    if ((goUp && pos.y > targetPos.y) || (goDown && pos.y < targetPos.y))
-        //    {
-        //        transition.isLooping = true;
-        //        return;
-        //    }
-
-        //    navigator.transform.position = pos;
-        //}
 
         public override void EndTransition(Navigator navigator, Navigator.ActiveTransition transition)
         {
             base.EndTransition(navigator, transition);
+
             if (isMovingOnStaris)
             {
                 int cell = Grid.PosToCell(navigator.transform.GetPosition());
                 if (MyGrid.IsHypotenuse(cell))
                 {
-                    navigator.transform.position = startPos;
+                    if (pendingStop && Grid.IsValidCell(transitionTargetCell))
+                    {
+                        navigator.transform.position = targetPos;
+                    }
+                    else
+                    {
+                        navigator.transform.position = startPos;
+                    }
                 }
             }
             isMovingOnStaris = false;
+            transitionOriginCell = Grid.InvalidCell;
+            transitionHypotenuseCell = Grid.InvalidCell;
+            transitionTargetCell = Grid.InvalidCell;
+
         }
 
         public bool isMovingOnStaris = false;
-        private float time;
+        public int transitionOriginCell = Grid.InvalidCell;
+        public bool allowForcedStop = false;
+        private int transitionHypotenuseCell = Grid.InvalidCell;
+        private int transitionTargetCell = Grid.InvalidCell;
+        private bool pendingStop;
+        private bool pendingStopArrived;
+        private bool pendingStopPlayIdle;
         private Vector3 startPos;
         private Vector3 targetPos;
+
+        public bool DeferStop(Navigator navigator, bool arrivedAtDestination, bool playIdle)
+        {
+            if (!isMovingOnStaris) return false;
+            if (allowForcedStop)
+            {
+                pendingStop = false;
+                return false;
+            }
+
+            int currentCell = Grid.PosToCell(navigator);
+            bool invalidCell = !Grid.IsValidCell(currentCell);
+            bool supportRemoved = MyGrid.Masks == null ||
+                !Grid.IsValidCell(transitionHypotenuseCell) ||
+                !MyGrid.IsHypotenuse(transitionHypotenuseCell);
+            bool navTypeChanged = navigator.CurrentNavType != NavType.Floor;
+            if (invalidCell || supportRemoved || navTypeChanged)
+            {
+                pendingStop = false;
+                return false;
+            }
+
+            pendingStop = true;
+            pendingStopArrived = arrivedAtDestination;
+            pendingStopPlayIdle = playIdle;
+            return true;
+        }
+
+        public bool TryTakePendingStop(out bool arrivedAtDestination, out bool playIdle)
+        {
+            arrivedAtDestination = pendingStopArrived;
+            playIdle = pendingStopPlayIdle;
+            if (isMovingOnStaris || !pendingStop) return false;
+
+            pendingStop = false;
+            return true;
+        }
     }
 }

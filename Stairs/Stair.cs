@@ -26,7 +26,7 @@ namespace Stairs
                 extents = building.GetExtents();
             }
             Extents watch_extents = new Extents(extents.x - 1, extents.y - 1, extents.width + 2, extents.height + 2);
-            partitionerEntry = GameScenePartitioner.Instance.Add("AnimStairs.OnSpawn", gameObject, watch_extents, GameScenePartitioner.Instance.objectLayers[(int)objectLayer], new Action<object>(OnNeighbourCellsUpdated));
+            partitionerEntry = GameScenePartitioner.Instance.Add_obsolete("AnimStairs.OnSpawn", gameObject, watch_extents, GameScenePartitioner.Instance.objectLayers[(int)objectLayer], new Action<object>(OnNeighbourCellsUpdated));
             //underConstruction = this.HasTag(GameTags.UnderConstruction);
             UpdateEndCaps();
         }
@@ -249,8 +249,8 @@ namespace Stairs
         {
             base.OnSpawn();
             GetComponent<KSelectable>().SetStatusItem(Db.Get().StatusItemCategories.Main, Db.Get().BuildingStatusItems.Normal, null);
-            Subscribe((int)GameHashes.RefreshUserMenu, OnRefreshUserMenuDelegate);
-            Subscribe((int)GameHashes.StatusChange, OnRefreshUserMenuDelegate);
+            Subscribe((int)GameHashes.RefreshUserMenu, OnRefreshUserMenuDelegate,this);
+            Subscribe((int)GameHashes.StatusChange, OnRefreshUserMenuDelegate,this);
             Rotatable rotatable = GetComponent<Rotatable>();
             int cell = Grid.PosToCell(this);
             MyGrid.Masks[cell] |= MyGrid.Flags.HasStair;
@@ -269,17 +269,14 @@ namespace Stairs
             MyGrid.Masks[cell] = MyGrid.IsScaffolding(cell) ? MyGrid.Flags.HasScaffolding : 0;
             Pathfinding.Instance.AddDirtyNavGridCell(Grid.CellAbove(cell));
         }
-
-        public List<Descriptor> GetDescriptors(GameObject go)
+        public void CollectDescriptors(GameObject go, List<Descriptor> descriptors)
         {
-            var list = new List<Descriptor>();
             Descriptor descriptor = default(Descriptor);
             descriptor.SetupDescriptor(string.Format(UI.BUILDINGEFFECTS.DUPLICANTMOVEMENTBOOST,
                 GameUtil.GetFormattedPercent(MyTransitionLayer.upwardsMovementSpeedMultiplier * 100f - 100f, GameUtil.TimeSlice.None)),
                 string.Format(UI.BUILDINGEFFECTS.TOOLTIPS.DUPLICANTMOVEMENTBOOST, GameUtil.GetFormattedPercent(MyTransitionLayer.upwardsMovementSpeedMultiplier * 100f - 100f, GameUtil.TimeSlice.None)),
                 Descriptor.DescriptorType.Effect);
-            list.Add(descriptor);
-            return list;
+            descriptors.Add(descriptor);
         }
 
         private void OnMenuToggle()
@@ -307,10 +304,10 @@ namespace Stairs
             Game.Instance.userMenu.AddButton(gameObject, button, 1f);
         }
 
-        private static readonly EventSystem.IntraObjectHandler<Stair> OnRefreshUserMenuDelegate = new EventSystem.IntraObjectHandler<Stair>(delegate (Stair component, object data)
+        private static readonly Action<object, object> OnRefreshUserMenuDelegate = delegate (object context, object data)
         {
-            component.OnRefreshUserMenu(data);
-        });
+            ((Stair)context).OnRefreshUserMenu(data);
+        };
 
         //[Serialize]
         //private bool blocked;
