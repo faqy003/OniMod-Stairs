@@ -340,3 +340,7 @@ ASALocalRun/
 healthchecksdb
 /lib
 /lib-vanilla
+/.probe
+/StairsDiag.ps1
+/CHANGES-diagonal-interrupt.md
+/CHANGES-netstandard2.1.md
